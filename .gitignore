@@ -1,0 +1,12 @@
+# Build artifacts
+terraform-provider-dokploy
+tools/hcl-generator/hcl-generator
+
+# Generated HCL files
+tools/hcl-generator/generated/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
