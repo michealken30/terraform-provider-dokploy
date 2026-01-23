@@ -184,6 +184,7 @@ type Generator struct {
 	servers   map[string]Server
 	sshKeys   map[string]SSHKey
 	projects  map[string]Project
+	usedNames map[string]int // Track used resource names to avoid collisions
 }
 
 func NewGenerator(backupDir, outputDir string) *Generator {
@@ -194,7 +195,19 @@ func NewGenerator(backupDir, outputDir string) *Generator {
 		servers:   make(map[string]Server),
 		sshKeys:   make(map[string]SSHKey),
 		projects:  make(map[string]Project),
+		usedNames: make(map[string]int),
 	}
+}
+
+// uniqueName returns a unique resource name, appending a counter if needed
+func (g *Generator) uniqueName(resourceType, baseName string) string {
+	key := resourceType + "." + baseName
+	count := g.usedNames[key]
+	g.usedNames[key] = count + 1
+	if count == 0 {
+		return baseName
+	}
+	return fmt.Sprintf("%s_%d", baseName, count+1)
 }
 
 func (g *Generator) loadJSON(filename string, v interface{}) error {
@@ -458,7 +471,8 @@ func (g *Generator) generateApplications(projects []Project) error {
 			envName := sanitizeName(env.Name)
 			for _, app := range env.Applications {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(app.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(app.Name))
+				resourceName := g.uniqueName("dokploy_application", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_application.%s
@@ -514,7 +528,8 @@ func (g *Generator) generateCompose(projects []Project) error {
 			envName := sanitizeName(env.Name)
 			for _, comp := range env.Compose {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(comp.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(comp.Name))
+				resourceName := g.uniqueName("dokploy_compose", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_compose.%s
@@ -571,7 +586,8 @@ func (g *Generator) generateDatabases(projects []Project) error {
 			// Postgres
 			for _, pg := range env.Postgres {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(pg.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(pg.Name))
+				resourceName := g.uniqueName("dokploy_postgres", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_postgres.%s
@@ -603,7 +619,8 @@ func (g *Generator) generateDatabases(projects []Project) error {
 			// MySQL
 			for _, mysql := range env.MySQL {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(mysql.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(mysql.Name))
+				resourceName := g.uniqueName("dokploy_mysql", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_mysql.%s
@@ -635,7 +652,8 @@ func (g *Generator) generateDatabases(projects []Project) error {
 			// MariaDB
 			for _, mariadb := range env.MariaDB {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(mariadb.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(mariadb.Name))
+				resourceName := g.uniqueName("dokploy_mariadb", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_mariadb.%s
@@ -667,7 +685,8 @@ func (g *Generator) generateDatabases(projects []Project) error {
 			// Mongo
 			for _, mongo := range env.Mongo {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(mongo.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(mongo.Name))
+				resourceName := g.uniqueName("dokploy_mongo", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_mongo.%s
@@ -698,7 +717,8 @@ func (g *Generator) generateDatabases(projects []Project) error {
 			// Redis
 			for _, redis := range env.Redis {
 				hasContent = true
-				resourceName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(redis.Name))
+				baseName := fmt.Sprintf("%s_%s_%s", projectName, envName, sanitizeName(redis.Name))
+				resourceName := g.uniqueName("dokploy_redis", baseName)
 
 				g.imports = append(g.imports, fmt.Sprintf(`import {
   to = dokploy_redis.%s
