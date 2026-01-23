@@ -79,6 +79,7 @@ type Compose struct {
 	CreatedAt         time.Time `json:"createdAt"`
 	EnvironmentID     string    `json:"environmentId"`
 	ComposeFile       string    `json:"composeFile"`
+	ComposePath       string    `json:"composePath"`
 	ComposeType       string    `json:"composeType"`
 	ComposeStatus     string    `json:"composeStatus"`
 	SourceType        string    `json:"sourceType"`

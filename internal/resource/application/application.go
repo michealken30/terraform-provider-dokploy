@@ -60,8 +60,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required:    true,
 			},
 			"app_name": schema.StringAttribute{
-				Description: "The internal app name (used for container naming).",
-				Optional:    true,
+				Description: "The internal app name (used for container naming). Computed by Dokploy based on the name.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -116,11 +115,6 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	createReq := client.CreateApplicationRequest{
 		Name:          plan.Name.ValueString(),
 		EnvironmentID: plan.EnvironmentID.ValueString(),
-	}
-
-	if !plan.AppName.IsNull() {
-		appName := plan.AppName.ValueString()
-		createReq.AppName = &appName
 	}
 
 	if !plan.Description.IsNull() {
@@ -220,11 +214,6 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	if !plan.Name.Equal(state.Name) {
 		name := plan.Name.ValueString()
 		updateReq.Name = &name
-	}
-
-	if !plan.AppName.Equal(state.AppName) {
-		appName := plan.AppName.ValueString()
-		updateReq.AppName = &appName
 	}
 
 	if !plan.Description.Equal(state.Description) {

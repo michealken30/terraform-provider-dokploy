@@ -67,6 +67,9 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
+	// Debug: log the request body
+	fmt.Printf("[DEBUG] POST %s: %s\n", endpoint, string(jsonBody))
+
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -663,6 +666,549 @@ func (c *Client) DeleteApplication(ctx context.Context, applicationID string) er
 	_, err := c.doPostRequest(ctx, "/application.delete", req)
 	if err != nil {
 		return fmt.Errorf("deleting application: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Compose CRUD Operations
+// =============================================================================
+
+// CreateComposeRequest represents the request body for creating a compose service
+type CreateComposeRequest struct {
+	Name          string  `json:"name"`
+	Description   *string `json:"description,omitempty"`
+	EnvironmentID string  `json:"environmentId"`
+	ServerID      *string `json:"serverId,omitempty"`
+	ComposeType   string  `json:"composeType"`
+}
+
+// CreateComposeResponse represents the response from creating a compose service
+type CreateComposeResponse struct {
+	ComposeID string `json:"composeId"`
+}
+
+// UpdateComposeRequest represents the request body for updating a compose service
+type UpdateComposeRequest struct {
+	ComposeID   string  `json:"composeId"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	ComposeFile *string `json:"composeFile,omitempty"`
+}
+
+// DeleteComposeRequest represents the request body for deleting a compose service
+type DeleteComposeRequest struct {
+	ComposeID string `json:"composeId"`
+}
+
+// CreateCompose creates a new compose service
+func (c *Client) CreateCompose(ctx context.Context, req CreateComposeRequest) (*CreateComposeResponse, error) {
+	data, err := c.doPostRequest(ctx, "/compose.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating compose: %w", err)
+	}
+
+	var resp CreateComposeResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create compose response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetCompose finds a compose by ID across all projects
+func (c *Client) GetCompose(ctx context.Context, composeID string) (*Compose, error) {
+	projects, err := c.GetProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proj := range projects {
+		for _, env := range proj.Environments {
+			for i := range env.Compose {
+				if env.Compose[i].ComposeID == composeID {
+					return &env.Compose[i], nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("compose not found: %s", composeID)
+}
+
+// UpdateCompose updates an existing compose service
+func (c *Client) UpdateCompose(ctx context.Context, req UpdateComposeRequest) error {
+	_, err := c.doPostRequest(ctx, "/compose.update", req)
+	if err != nil {
+		return fmt.Errorf("updating compose: %w", err)
+	}
+	return nil
+}
+
+// DeleteCompose deletes a compose service
+func (c *Client) DeleteCompose(ctx context.Context, composeID string) error {
+	req := DeleteComposeRequest{ComposeID: composeID}
+	_, err := c.doPostRequest(ctx, "/compose.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting compose: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Postgres CRUD Operations
+// =============================================================================
+
+// CreatePostgresRequest represents the request body for creating a postgres service
+type CreatePostgresRequest struct {
+	Name             string  `json:"name"`
+	AppName          string  `json:"appName"`
+	Description      *string `json:"description,omitempty"`
+	EnvironmentID    string  `json:"environmentId"`
+	ServerID         *string `json:"serverId,omitempty"`
+	DatabaseName     string  `json:"databaseName"`
+	DatabaseUser     string  `json:"databaseUser"`
+	DatabasePassword string  `json:"databasePassword"`
+	DockerImage      *string `json:"dockerImage,omitempty"`
+}
+
+// CreatePostgresResponse represents the response from creating a postgres service
+type CreatePostgresResponse struct {
+	PostgresID string `json:"postgresId"`
+}
+
+// UpdatePostgresRequest represents the request body for updating a postgres service
+type UpdatePostgresRequest struct {
+	PostgresID       string  `json:"postgresId"`
+	Name             *string `json:"name,omitempty"`
+	Description      *string `json:"description,omitempty"`
+	DatabaseName     *string `json:"databaseName,omitempty"`
+	DatabaseUser     *string `json:"databaseUser,omitempty"`
+	DatabasePassword *string `json:"databasePassword,omitempty"`
+	DockerImage      *string `json:"dockerImage,omitempty"`
+}
+
+// DeletePostgresRequest represents the request body for deleting a postgres service
+type DeletePostgresRequest struct {
+	PostgresID string `json:"postgresId"`
+}
+
+// CreatePostgres creates a new postgres service
+func (c *Client) CreatePostgres(ctx context.Context, req CreatePostgresRequest) (*CreatePostgresResponse, error) {
+	data, err := c.doPostRequest(ctx, "/postgres.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating postgres: %w", err)
+	}
+
+	var resp CreatePostgresResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create postgres response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetPostgres finds a postgres by ID across all projects
+func (c *Client) GetPostgres(ctx context.Context, postgresID string) (*Postgres, error) {
+	projects, err := c.GetProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proj := range projects {
+		for _, env := range proj.Environments {
+			for i := range env.Postgres {
+				if env.Postgres[i].PostgresID == postgresID {
+					return &env.Postgres[i], nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("postgres not found: %s", postgresID)
+}
+
+// UpdatePostgres updates an existing postgres service
+func (c *Client) UpdatePostgres(ctx context.Context, req UpdatePostgresRequest) error {
+	_, err := c.doPostRequest(ctx, "/postgres.update", req)
+	if err != nil {
+		return fmt.Errorf("updating postgres: %w", err)
+	}
+	return nil
+}
+
+// DeletePostgres deletes a postgres service
+func (c *Client) DeletePostgres(ctx context.Context, postgresID string) error {
+	req := DeletePostgresRequest{PostgresID: postgresID}
+	_, err := c.doPostRequest(ctx, "/postgres.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting postgres: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// MySQL CRUD Operations
+// =============================================================================
+
+// CreateMysqlRequest represents the request body for creating a mysql service
+type CreateMysqlRequest struct {
+	Name                 string  `json:"name"`
+	AppName              string  `json:"appName"`
+	Description          *string `json:"description,omitempty"`
+	EnvironmentID        string  `json:"environmentId"`
+	ServerID             *string `json:"serverId,omitempty"`
+	DatabaseName         string  `json:"databaseName"`
+	DatabaseUser         string  `json:"databaseUser"`
+	DatabasePassword     string  `json:"databasePassword"`
+	DatabaseRootPassword string  `json:"databaseRootPassword"`
+	DockerImage          *string `json:"dockerImage,omitempty"`
+}
+
+// CreateMysqlResponse represents the response from creating a mysql service
+type CreateMysqlResponse struct {
+	MysqlID string `json:"mysqlId"`
+}
+
+// UpdateMysqlRequest represents the request body for updating a mysql service
+type UpdateMysqlRequest struct {
+	MysqlID              string  `json:"mysqlId"`
+	Name                 *string `json:"name,omitempty"`
+	Description          *string `json:"description,omitempty"`
+	DatabaseName         *string `json:"databaseName,omitempty"`
+	DatabaseUser         *string `json:"databaseUser,omitempty"`
+	DatabasePassword     *string `json:"databasePassword,omitempty"`
+	DatabaseRootPassword *string `json:"databaseRootPassword,omitempty"`
+	DockerImage          *string `json:"dockerImage,omitempty"`
+}
+
+// DeleteMysqlRequest represents the request body for deleting a mysql service
+type DeleteMysqlRequest struct {
+	MysqlID string `json:"mysqlId"`
+}
+
+// CreateMysql creates a new mysql service
+func (c *Client) CreateMysql(ctx context.Context, req CreateMysqlRequest) (*CreateMysqlResponse, error) {
+	data, err := c.doPostRequest(ctx, "/mysql.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating mysql: %w", err)
+	}
+
+	var resp CreateMysqlResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create mysql response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetMysql finds a mysql by ID across all projects
+func (c *Client) GetMysql(ctx context.Context, mysqlID string) (*MySQL, error) {
+	projects, err := c.GetProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proj := range projects {
+		for _, env := range proj.Environments {
+			for i := range env.MySQL {
+				if env.MySQL[i].MySQLID == mysqlID {
+					return &env.MySQL[i], nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("mysql not found: %s", mysqlID)
+}
+
+// UpdateMysql updates an existing mysql service
+func (c *Client) UpdateMysql(ctx context.Context, req UpdateMysqlRequest) error {
+	_, err := c.doPostRequest(ctx, "/mysql.update", req)
+	if err != nil {
+		return fmt.Errorf("updating mysql: %w", err)
+	}
+	return nil
+}
+
+// DeleteMysql deletes a mysql service
+func (c *Client) DeleteMysql(ctx context.Context, mysqlID string) error {
+	req := DeleteMysqlRequest{MysqlID: mysqlID}
+	_, err := c.doPostRequest(ctx, "/mysql.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting mysql: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// MariaDB CRUD Operations
+// =============================================================================
+
+// CreateMariadbRequest represents the request body for creating a mariadb service
+type CreateMariadbRequest struct {
+	Name                 string  `json:"name"`
+	AppName              string  `json:"appName"`
+	Description          *string `json:"description,omitempty"`
+	EnvironmentID        string  `json:"environmentId"`
+	ServerID             *string `json:"serverId,omitempty"`
+	DatabaseName         string  `json:"databaseName"`
+	DatabaseUser         string  `json:"databaseUser"`
+	DatabasePassword     string  `json:"databasePassword"`
+	DatabaseRootPassword string  `json:"databaseRootPassword"`
+	DockerImage          *string `json:"dockerImage,omitempty"`
+}
+
+// CreateMariadbResponse represents the response from creating a mariadb service
+type CreateMariadbResponse struct {
+	MariadbID string `json:"mariadbId"`
+}
+
+// UpdateMariadbRequest represents the request body for updating a mariadb service
+type UpdateMariadbRequest struct {
+	MariadbID            string  `json:"mariadbId"`
+	Name                 *string `json:"name,omitempty"`
+	Description          *string `json:"description,omitempty"`
+	DatabaseName         *string `json:"databaseName,omitempty"`
+	DatabaseUser         *string `json:"databaseUser,omitempty"`
+	DatabasePassword     *string `json:"databasePassword,omitempty"`
+	DatabaseRootPassword *string `json:"databaseRootPassword,omitempty"`
+	DockerImage          *string `json:"dockerImage,omitempty"`
+}
+
+// DeleteMariadbRequest represents the request body for deleting a mariadb service
+type DeleteMariadbRequest struct {
+	MariadbID string `json:"mariadbId"`
+}
+
+// CreateMariadb creates a new mariadb service
+func (c *Client) CreateMariadb(ctx context.Context, req CreateMariadbRequest) (*CreateMariadbResponse, error) {
+	data, err := c.doPostRequest(ctx, "/mariadb.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating mariadb: %w", err)
+	}
+
+	var resp CreateMariadbResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create mariadb response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetMariadb finds a mariadb by ID across all projects
+func (c *Client) GetMariadb(ctx context.Context, mariadbID string) (*MariaDB, error) {
+	projects, err := c.GetProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proj := range projects {
+		for _, env := range proj.Environments {
+			for i := range env.MariaDB {
+				if env.MariaDB[i].MariaDBID == mariadbID {
+					return &env.MariaDB[i], nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("mariadb not found: %s", mariadbID)
+}
+
+// UpdateMariadb updates an existing mariadb service
+func (c *Client) UpdateMariadb(ctx context.Context, req UpdateMariadbRequest) error {
+	_, err := c.doPostRequest(ctx, "/mariadb.update", req)
+	if err != nil {
+		return fmt.Errorf("updating mariadb: %w", err)
+	}
+	return nil
+}
+
+// DeleteMariadb deletes a mariadb service
+func (c *Client) DeleteMariadb(ctx context.Context, mariadbID string) error {
+	req := DeleteMariadbRequest{MariadbID: mariadbID}
+	_, err := c.doPostRequest(ctx, "/mariadb.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting mariadb: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// MongoDB CRUD Operations
+// =============================================================================
+
+// CreateMongoRequest represents the request body for creating a mongo service
+type CreateMongoRequest struct {
+	Name             string  `json:"name"`
+	AppName          string  `json:"appName"`
+	Description      *string `json:"description,omitempty"`
+	EnvironmentID    string  `json:"environmentId"`
+	ServerID         *string `json:"serverId,omitempty"`
+	DatabaseUser     string  `json:"databaseUser"`
+	DatabasePassword string  `json:"databasePassword"`
+	DockerImage      *string `json:"dockerImage,omitempty"`
+}
+
+// CreateMongoResponse represents the response from creating a mongo service
+type CreateMongoResponse struct {
+	MongoID string `json:"mongoId"`
+}
+
+// UpdateMongoRequest represents the request body for updating a mongo service
+type UpdateMongoRequest struct {
+	MongoID          string  `json:"mongoId"`
+	Name             *string `json:"name,omitempty"`
+	Description      *string `json:"description,omitempty"`
+	DatabaseUser     *string `json:"databaseUser,omitempty"`
+	DatabasePassword *string `json:"databasePassword,omitempty"`
+	DockerImage      *string `json:"dockerImage,omitempty"`
+}
+
+// DeleteMongoRequest represents the request body for deleting a mongo service
+type DeleteMongoRequest struct {
+	MongoID string `json:"mongoId"`
+}
+
+// CreateMongo creates a new mongo service
+func (c *Client) CreateMongo(ctx context.Context, req CreateMongoRequest) (*CreateMongoResponse, error) {
+	data, err := c.doPostRequest(ctx, "/mongo.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating mongo: %w", err)
+	}
+
+	var resp CreateMongoResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create mongo response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetMongo finds a mongo by ID across all projects
+func (c *Client) GetMongo(ctx context.Context, mongoID string) (*Mongo, error) {
+	projects, err := c.GetProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proj := range projects {
+		for _, env := range proj.Environments {
+			for i := range env.Mongo {
+				if env.Mongo[i].MongoID == mongoID {
+					return &env.Mongo[i], nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("mongo not found: %s", mongoID)
+}
+
+// UpdateMongo updates an existing mongo service
+func (c *Client) UpdateMongo(ctx context.Context, req UpdateMongoRequest) error {
+	_, err := c.doPostRequest(ctx, "/mongo.update", req)
+	if err != nil {
+		return fmt.Errorf("updating mongo: %w", err)
+	}
+	return nil
+}
+
+// DeleteMongo deletes a mongo service
+func (c *Client) DeleteMongo(ctx context.Context, mongoID string) error {
+	req := DeleteMongoRequest{MongoID: mongoID}
+	_, err := c.doPostRequest(ctx, "/mongo.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting mongo: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Redis CRUD Operations
+// =============================================================================
+
+// CreateRedisRequest represents the request body for creating a redis service
+type CreateRedisRequest struct {
+	Name             string  `json:"name"`
+	AppName          string  `json:"appName"`
+	Description      *string `json:"description,omitempty"`
+	EnvironmentID    string  `json:"environmentId"`
+	ServerID         *string `json:"serverId,omitempty"`
+	DatabasePassword string  `json:"databasePassword"`
+	DockerImage      *string `json:"dockerImage,omitempty"`
+}
+
+// CreateRedisResponse represents the response from creating a redis service
+type CreateRedisResponse struct {
+	RedisID string `json:"redisId"`
+}
+
+// UpdateRedisRequest represents the request body for updating a redis service
+type UpdateRedisRequest struct {
+	RedisID          string  `json:"redisId"`
+	Name             *string `json:"name,omitempty"`
+	Description      *string `json:"description,omitempty"`
+	DatabasePassword *string `json:"databasePassword,omitempty"`
+	DockerImage      *string `json:"dockerImage,omitempty"`
+}
+
+// DeleteRedisRequest represents the request body for deleting a redis service
+type DeleteRedisRequest struct {
+	RedisID string `json:"redisId"`
+}
+
+// CreateRedis creates a new redis service
+func (c *Client) CreateRedis(ctx context.Context, req CreateRedisRequest) (*CreateRedisResponse, error) {
+	data, err := c.doPostRequest(ctx, "/redis.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating redis: %w", err)
+	}
+
+	var resp CreateRedisResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create redis response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetRedis finds a redis by ID across all projects
+func (c *Client) GetRedis(ctx context.Context, redisID string) (*Redis, error) {
+	projects, err := c.GetProjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proj := range projects {
+		for _, env := range proj.Environments {
+			for i := range env.Redis {
+				if env.Redis[i].RedisID == redisID {
+					return &env.Redis[i], nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("redis not found: %s", redisID)
+}
+
+// UpdateRedis updates an existing redis service
+func (c *Client) UpdateRedis(ctx context.Context, req UpdateRedisRequest) error {
+	_, err := c.doPostRequest(ctx, "/redis.update", req)
+	if err != nil {
+		return fmt.Errorf("updating redis: %w", err)
+	}
+	return nil
+}
+
+// DeleteRedis deletes a redis service
+func (c *Client) DeleteRedis(ctx context.Context, redisID string) error {
+	req := DeleteRedisRequest{RedisID: redisID}
+	_, err := c.doPostRequest(ctx, "/redis.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting redis: %w", err)
 	}
 	return nil
 }

@@ -23,8 +23,14 @@ import (
 
 	// Resources
 	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
+	composers "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/compose"
 	environmentrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/environment"
+	mariadbrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mariadb"
+	mongors "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mongo"
+	mysqlrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mysql"
+	postgresrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/postgres"
 	projectrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/project"
+	redisrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/redis"
 	serverrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/server"
 )
 
@@ -123,6 +129,12 @@ func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resou
 		serverrs.NewResource,
 		environmentrs.NewResource,
 		applicationrs.NewResource,
+		composers.NewResource,
+		postgresrs.NewResource,
+		mysqlrs.NewResource,
+		mariadbrs.NewResource,
+		mongors.NewResource,
+		redisrs.NewResource,
 	}
 }
 
