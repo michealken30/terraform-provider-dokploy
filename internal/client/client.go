@@ -67,9 +67,6 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	// Debug: log the request body
-	fmt.Printf("[DEBUG] POST %s: %s\n", endpoint, string(jsonBody))
-
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
@@ -95,6 +92,43 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 	}
 
 	return respBody, nil
+}
+
+// doDeleteRequest performs a delete request, treating 404 as success (resource already gone)
+func (c *Client) doDeleteRequest(ctx context.Context, endpoint string, body interface{}) error {
+	url := fmt.Sprintf("%s/api%s", c.baseURL, endpoint)
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("marshaling request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return fmt.Errorf("creating request: %w", err)
+	}
+
+	req.Header.Set("x-api-key", c.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("executing request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading response body: %w", err)
+	}
+
+	// Treat 200 OK and 404 Not Found as success (resource deleted or already gone)
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+
+	return fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(respBody))
 }
 
 // GetProjects fetches all projects with nested environments and services
@@ -337,11 +371,7 @@ func (c *Client) UpdateRegistry(ctx context.Context, req UpdateRegistryRequest) 
 // DeleteRegistry deletes a registry
 func (c *Client) DeleteRegistry(ctx context.Context, registryID string) error {
 	req := DeleteRegistryRequest{RegistryID: registryID}
-	_, err := c.doPostRequest(ctx, "/registry.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting registry: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/registry.remove", req)
 }
 
 // GetCertificates fetches all SSL certificates
@@ -440,11 +470,7 @@ func (c *Client) UpdateCertificate(ctx context.Context, req UpdateCertificateReq
 // DeleteCertificate deletes a certificate
 func (c *Client) DeleteCertificate(ctx context.Context, certificateID string) error {
 	req := DeleteCertificateRequest{CertificateID: certificateID}
-	_, err := c.doPostRequest(ctx, "/certificates.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting certificate: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/certificates.remove", req)
 }
 
 // GetDestinations fetches all backup destinations
@@ -547,11 +573,7 @@ func (c *Client) UpdateDestination(ctx context.Context, req UpdateDestinationReq
 // DeleteDestination deletes a destination
 func (c *Client) DeleteDestination(ctx context.Context, destinationID string) error {
 	req := DeleteDestinationRequest{DestinationID: destinationID}
-	_, err := c.doPostRequest(ctx, "/destination.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting destination: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/destination.remove", req)
 }
 
 // GetNotifications fetches all notification configurations
@@ -673,11 +695,7 @@ func (c *Client) UpdateProject(ctx context.Context, req UpdateProjectRequest) er
 // DeleteProject deletes a project
 func (c *Client) DeleteProject(ctx context.Context, projectID string) error {
 	req := DeleteProjectRequest{ProjectID: projectID}
-	_, err := c.doPostRequest(ctx, "/project.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting project: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/project.remove", req)
 }
 
 // =============================================================================
@@ -737,11 +755,7 @@ func (c *Client) UpdateSSHKey(ctx context.Context, req UpdateSSHKeyRequest) erro
 // DeleteSSHKey deletes an SSH key
 func (c *Client) DeleteSSHKey(ctx context.Context, sshKeyID string) error {
 	req := DeleteSSHKeyRequest{SSHKeyID: sshKeyID}
-	_, err := c.doPostRequest(ctx, "/sshKey.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting SSH key: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/sshKey.remove", req)
 }
 
 // =============================================================================
@@ -807,11 +821,7 @@ func (c *Client) UpdateServer(ctx context.Context, req UpdateServerRequest) erro
 // DeleteServer deletes a server
 func (c *Client) DeleteServer(ctx context.Context, serverID string) error {
 	req := DeleteServerRequest{ServerID: serverID}
-	_, err := c.doPostRequest(ctx, "/server.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting server: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/server.remove", req)
 }
 
 // =============================================================================
@@ -869,11 +879,7 @@ func (c *Client) UpdateEnvironment(ctx context.Context, req UpdateEnvironmentReq
 // DeleteEnvironment deletes an environment
 func (c *Client) DeleteEnvironment(ctx context.Context, environmentID string) error {
 	req := DeleteEnvironmentRequest{EnvironmentID: environmentID}
-	_, err := c.doPostRequest(ctx, "/environment.remove", req)
-	if err != nil {
-		return fmt.Errorf("deleting environment: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/environment.remove", req)
 }
 
 // =============================================================================
@@ -934,11 +940,7 @@ func (c *Client) UpdateApplication(ctx context.Context, req UpdateApplicationReq
 // DeleteApplication deletes an application
 func (c *Client) DeleteApplication(ctx context.Context, applicationID string) error {
 	req := DeleteApplicationRequest{ApplicationID: applicationID}
-	_, err := c.doPostRequest(ctx, "/application.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting application: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/application.delete", req)
 }
 
 // =============================================================================
@@ -1019,11 +1021,7 @@ func (c *Client) UpdateCompose(ctx context.Context, req UpdateComposeRequest) er
 // DeleteCompose deletes a compose service
 func (c *Client) DeleteCompose(ctx context.Context, composeID string) error {
 	req := DeleteComposeRequest{ComposeID: composeID}
-	_, err := c.doPostRequest(ctx, "/compose.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting compose: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/compose.delete", req)
 }
 
 // =============================================================================
@@ -1111,11 +1109,7 @@ func (c *Client) UpdatePostgres(ctx context.Context, req UpdatePostgresRequest) 
 // DeletePostgres deletes a postgres service
 func (c *Client) DeletePostgres(ctx context.Context, postgresID string) error {
 	req := DeletePostgresRequest{PostgresID: postgresID}
-	_, err := c.doPostRequest(ctx, "/postgres.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting postgres: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/postgres.delete", req)
 }
 
 // =============================================================================
@@ -1205,11 +1199,7 @@ func (c *Client) UpdateMysql(ctx context.Context, req UpdateMysqlRequest) error 
 // DeleteMysql deletes a mysql service
 func (c *Client) DeleteMysql(ctx context.Context, mysqlID string) error {
 	req := DeleteMysqlRequest{MysqlID: mysqlID}
-	_, err := c.doPostRequest(ctx, "/mysql.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting mysql: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/mysql.delete", req)
 }
 
 // =============================================================================
@@ -1299,11 +1289,7 @@ func (c *Client) UpdateMariadb(ctx context.Context, req UpdateMariadbRequest) er
 // DeleteMariadb deletes a mariadb service
 func (c *Client) DeleteMariadb(ctx context.Context, mariadbID string) error {
 	req := DeleteMariadbRequest{MariadbID: mariadbID}
-	_, err := c.doPostRequest(ctx, "/mariadb.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting mariadb: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/mariadb.delete", req)
 }
 
 // =============================================================================
@@ -1389,11 +1375,7 @@ func (c *Client) UpdateMongo(ctx context.Context, req UpdateMongoRequest) error 
 // DeleteMongo deletes a mongo service
 func (c *Client) DeleteMongo(ctx context.Context, mongoID string) error {
 	req := DeleteMongoRequest{MongoID: mongoID}
-	_, err := c.doPostRequest(ctx, "/mongo.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting mongo: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/mongo.delete", req)
 }
 
 // =============================================================================
@@ -1477,9 +1459,5 @@ func (c *Client) UpdateRedis(ctx context.Context, req UpdateRedisRequest) error 
 // DeleteRedis deletes a redis service
 func (c *Client) DeleteRedis(ctx context.Context, redisID string) error {
 	req := DeleteRedisRequest{RedisID: redisID}
-	_, err := c.doPostRequest(ctx, "/redis.delete", req)
-	if err != nil {
-		return fmt.Errorf("deleting redis: %w", err)
-	}
-	return nil
+	return c.doDeleteRequest(ctx, "/redis.delete", req)
 }
