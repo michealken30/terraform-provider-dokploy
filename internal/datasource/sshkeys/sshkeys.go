@@ -116,6 +116,9 @@ func (d *SSHKeysDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
+	// Initialize to empty slice to avoid null in state
+	state.SSHKeys = []SSHKeyModel{}
+
 	for _, key := range keys {
 		state.SSHKeys = append(state.SSHKeys, SSHKeyModel{
 			ID:             types.StringValue(key.SSHKeyID),

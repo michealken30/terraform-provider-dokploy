@@ -139,6 +139,9 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	// Initialize to empty slice to avoid null in state
+	state.Projects = []ProjectModel{}
+
 	for _, project := range projects {
 		projectModel := ProjectModel{
 			ID:             types.StringValue(project.ProjectID),

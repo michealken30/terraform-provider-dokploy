@@ -10,14 +10,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/client"
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/application"
+
+	// Data sources
+	applicationds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/application"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/environments"
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/project"
+	projectds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/project"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/projects"
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/server"
+	serverds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/server"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/servers"
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/sshkey"
+	sshkeyds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/sshkey"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/sshkeys"
+
+	// Resources
+	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
+	environmentrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/environment"
+	projectrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/project"
+	serverrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/server"
 )
 
 // Ensure DokployProvider satisfies various provider interfaces.
@@ -110,19 +118,23 @@ func (p *DokployProvider) Configure(ctx context.Context, req provider.ConfigureR
 }
 
 func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resource {
-	// Phase 1: No resources yet (read-only)
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		projectrs.NewResource,
+		serverrs.NewResource,
+		environmentrs.NewResource,
+		applicationrs.NewResource,
+	}
 }
 
 func (p *DokployProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		projects.NewDataSource,
-		project.NewDataSource,
+		projectds.NewDataSource,
 		servers.NewDataSource,
-		server.NewDataSource,
+		serverds.NewDataSource,
 		sshkeys.NewDataSource,
-		sshkey.NewDataSource,
+		sshkeyds.NewDataSource,
 		environments.NewDataSource,
-		application.NewDataSource,
+		applicationds.NewDataSource,
 	}
 }

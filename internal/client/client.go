@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -55,6 +56,42 @@ func (c *Client) doRequest(ctx context.Context, endpoint string) ([]byte, error)
 	}
 
 	return body, nil
+}
+
+// doPostRequest performs an authenticated POST request with JSON body
+func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interface{}) ([]byte, error) {
+	url := fmt.Sprintf("%s/api%s", c.baseURL, endpoint)
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+
+	req.Header.Set("x-api-key", c.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	return respBody, nil
 }
 
 // GetProjects fetches all projects with nested environments and services
@@ -304,4 +341,328 @@ func (c *Client) GetEnvironmentsByProjectID(ctx context.Context, projectID strin
 	}
 
 	return project.Environments, nil
+}
+
+// =============================================================================
+// Project CRUD Operations
+// =============================================================================
+
+// CreateProjectRequest represents the request body for creating a project
+type CreateProjectRequest struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+}
+
+// CreateProjectResponse represents the response from creating a project
+type CreateProjectResponse struct {
+	Project struct {
+		ProjectID string `json:"projectId"`
+	} `json:"project"`
+}
+
+// UpdateProjectRequest represents the request body for updating a project
+type UpdateProjectRequest struct {
+	ProjectID   string  `json:"projectId"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+// DeleteProjectRequest represents the request body for deleting a project
+type DeleteProjectRequest struct {
+	ProjectID string `json:"projectId"`
+}
+
+// CreateProject creates a new project
+func (c *Client) CreateProject(ctx context.Context, req CreateProjectRequest) (*CreateProjectResponse, error) {
+	data, err := c.doPostRequest(ctx, "/project.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating project: %w", err)
+	}
+
+	var resp CreateProjectResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create project response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// UpdateProject updates an existing project
+func (c *Client) UpdateProject(ctx context.Context, req UpdateProjectRequest) error {
+	_, err := c.doPostRequest(ctx, "/project.update", req)
+	if err != nil {
+		return fmt.Errorf("updating project: %w", err)
+	}
+	return nil
+}
+
+// DeleteProject deletes a project
+func (c *Client) DeleteProject(ctx context.Context, projectID string) error {
+	req := DeleteProjectRequest{ProjectID: projectID}
+	_, err := c.doPostRequest(ctx, "/project.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting project: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// SSH Key CRUD Operations
+// =============================================================================
+
+// CreateSSHKeyRequest represents the request body for creating an SSH key
+type CreateSSHKeyRequest struct {
+	Name           string  `json:"name"`
+	Description    *string `json:"description,omitempty"`
+	PrivateKey     string  `json:"privateKey"`
+	PublicKey      string  `json:"publicKey"`
+	OrganizationID string  `json:"organizationId"`
+}
+
+// CreateSSHKeyResponse represents the response from creating an SSH key
+type CreateSSHKeyResponse struct {
+	SSHKeyID string `json:"sshKeyId"`
+}
+
+// UpdateSSHKeyRequest represents the request body for updating an SSH key
+type UpdateSSHKeyRequest struct {
+	SSHKeyID    string  `json:"sshKeyId"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+// DeleteSSHKeyRequest represents the request body for deleting an SSH key
+type DeleteSSHKeyRequest struct {
+	SSHKeyID string `json:"sshKeyId"`
+}
+
+// CreateSSHKey creates a new SSH key
+func (c *Client) CreateSSHKey(ctx context.Context, req CreateSSHKeyRequest) (*CreateSSHKeyResponse, error) {
+	data, err := c.doPostRequest(ctx, "/sshKey.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating SSH key: %w", err)
+	}
+
+	var resp CreateSSHKeyResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create SSH key response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// UpdateSSHKey updates an existing SSH key
+func (c *Client) UpdateSSHKey(ctx context.Context, req UpdateSSHKeyRequest) error {
+	_, err := c.doPostRequest(ctx, "/sshKey.update", req)
+	if err != nil {
+		return fmt.Errorf("updating SSH key: %w", err)
+	}
+	return nil
+}
+
+// DeleteSSHKey deletes an SSH key
+func (c *Client) DeleteSSHKey(ctx context.Context, sshKeyID string) error {
+	req := DeleteSSHKeyRequest{SSHKeyID: sshKeyID}
+	_, err := c.doPostRequest(ctx, "/sshKey.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting SSH key: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Server CRUD Operations
+// =============================================================================
+
+// CreateServerRequest represents the request body for creating a server
+type CreateServerRequest struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	IPAddress   string  `json:"ipAddress"`
+	Port        int     `json:"port"`
+	Username    string  `json:"username"`
+	SSHKeyID    *string `json:"sshKeyId"`
+	ServerType  string  `json:"serverType"` // "deploy" or "build"
+}
+
+// CreateServerResponse represents the response from creating a server
+type CreateServerResponse struct {
+	ServerID string `json:"serverId"`
+}
+
+// UpdateServerRequest represents the request body for updating a server
+type UpdateServerRequest struct {
+	ServerID    string  `json:"serverId"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	IPAddress   *string `json:"ipAddress,omitempty"`
+	Port        *int    `json:"port,omitempty"`
+	Username    *string `json:"username,omitempty"`
+	SSHKeyID    *string `json:"sshKeyId,omitempty"`
+}
+
+// DeleteServerRequest represents the request body for deleting a server
+type DeleteServerRequest struct {
+	ServerID string `json:"serverId"`
+}
+
+// CreateServer creates a new server
+func (c *Client) CreateServer(ctx context.Context, req CreateServerRequest) (*CreateServerResponse, error) {
+	data, err := c.doPostRequest(ctx, "/server.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating server: %w", err)
+	}
+
+	var resp CreateServerResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create server response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// UpdateServer updates an existing server
+func (c *Client) UpdateServer(ctx context.Context, req UpdateServerRequest) error {
+	_, err := c.doPostRequest(ctx, "/server.update", req)
+	if err != nil {
+		return fmt.Errorf("updating server: %w", err)
+	}
+	return nil
+}
+
+// DeleteServer deletes a server
+func (c *Client) DeleteServer(ctx context.Context, serverID string) error {
+	req := DeleteServerRequest{ServerID: serverID}
+	_, err := c.doPostRequest(ctx, "/server.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting server: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Environment CRUD Operations
+// =============================================================================
+
+// CreateEnvironmentRequest represents the request body for creating an environment
+type CreateEnvironmentRequest struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	ProjectID   string  `json:"projectId"`
+}
+
+// CreateEnvironmentResponse represents the response from creating an environment
+type CreateEnvironmentResponse struct {
+	EnvironmentID string `json:"environmentId"`
+}
+
+// UpdateEnvironmentRequest represents the request body for updating an environment
+type UpdateEnvironmentRequest struct {
+	EnvironmentID string  `json:"environmentId"`
+	Name          *string `json:"name,omitempty"`
+	Description   *string `json:"description,omitempty"`
+}
+
+// DeleteEnvironmentRequest represents the request body for deleting an environment
+type DeleteEnvironmentRequest struct {
+	EnvironmentID string `json:"environmentId"`
+}
+
+// CreateEnvironment creates a new environment
+func (c *Client) CreateEnvironment(ctx context.Context, req CreateEnvironmentRequest) (*CreateEnvironmentResponse, error) {
+	data, err := c.doPostRequest(ctx, "/environment.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating environment: %w", err)
+	}
+
+	var resp CreateEnvironmentResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create environment response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// UpdateEnvironment updates an existing environment
+func (c *Client) UpdateEnvironment(ctx context.Context, req UpdateEnvironmentRequest) error {
+	_, err := c.doPostRequest(ctx, "/environment.update", req)
+	if err != nil {
+		return fmt.Errorf("updating environment: %w", err)
+	}
+	return nil
+}
+
+// DeleteEnvironment deletes an environment
+func (c *Client) DeleteEnvironment(ctx context.Context, environmentID string) error {
+	req := DeleteEnvironmentRequest{EnvironmentID: environmentID}
+	_, err := c.doPostRequest(ctx, "/environment.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting environment: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Application CRUD Operations
+// =============================================================================
+
+// CreateApplicationRequest represents the request body for creating an application
+type CreateApplicationRequest struct {
+	Name          string  `json:"name"`
+	AppName       *string `json:"appName,omitempty"`
+	Description   *string `json:"description,omitempty"`
+	EnvironmentID string  `json:"environmentId"`
+	ServerID      *string `json:"serverId,omitempty"`
+}
+
+// CreateApplicationResponse represents the response from creating an application
+type CreateApplicationResponse struct {
+	ApplicationID string `json:"applicationId"`
+}
+
+// UpdateApplicationRequest represents the request body for updating an application
+type UpdateApplicationRequest struct {
+	ApplicationID string  `json:"applicationId"`
+	Name          *string `json:"name,omitempty"`
+	AppName       *string `json:"appName,omitempty"`
+	Description   *string `json:"description,omitempty"`
+}
+
+// DeleteApplicationRequest represents the request body for deleting an application
+type DeleteApplicationRequest struct {
+	ApplicationID string `json:"applicationId"`
+}
+
+// CreateApplication creates a new application
+func (c *Client) CreateApplication(ctx context.Context, req CreateApplicationRequest) (*CreateApplicationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/application.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating application: %w", err)
+	}
+
+	var resp CreateApplicationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create application response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// UpdateApplication updates an existing application
+func (c *Client) UpdateApplication(ctx context.Context, req UpdateApplicationRequest) error {
+	_, err := c.doPostRequest(ctx, "/application.update", req)
+	if err != nil {
+		return fmt.Errorf("updating application: %w", err)
+	}
+	return nil
+}
+
+// DeleteApplication deletes an application
+func (c *Client) DeleteApplication(ctx context.Context, applicationID string) error {
+	req := DeleteApplicationRequest{ApplicationID: applicationID}
+	_, err := c.doPostRequest(ctx, "/application.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting application: %w", err)
+	}
+	return nil
 }

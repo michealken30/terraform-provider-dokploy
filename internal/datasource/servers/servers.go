@@ -141,6 +141,9 @@ func (d *ServersDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
+	// Initialize to empty slice to avoid null in state
+	state.Servers = []ServerModel{}
+
 	for _, server := range servers {
 		state.Servers = append(state.Servers, ServerModel{
 			ID:                  types.StringValue(server.ServerID),
