@@ -23,7 +23,9 @@ import (
 
 	// Resources
 	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
+	certificaters "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/certificate"
 	composers "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/compose"
+	destinationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/destination"
 	environmentrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/environment"
 	mariadbrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mariadb"
 	mongors "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mongo"
@@ -31,7 +33,9 @@ import (
 	postgresrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/postgres"
 	projectrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/project"
 	redisrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/redis"
+	registryrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/registry"
 	serverrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/server"
+	sshkeyrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/sshkey"
 )
 
 // Ensure DokployProvider satisfies various provider interfaces.
@@ -135,6 +139,10 @@ func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resou
 		mariadbrs.NewResource,
 		mongors.NewResource,
 		redisrs.NewResource,
+		sshkeyrs.NewResource,
+		registryrs.NewResource,
+		certificaters.NewResource,
+		destinationrs.NewResource,
 	}
 }
 

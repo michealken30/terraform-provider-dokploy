@@ -253,6 +253,97 @@ func (c *Client) GetRegistries(ctx context.Context) ([]Registry, error) {
 	return registries, nil
 }
 
+// GetRegistry fetches a single registry by ID
+func (c *Client) GetRegistry(ctx context.Context, registryID string) (*Registry, error) {
+	registries, err := c.GetRegistries(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range registries {
+		if registries[i].RegistryID == registryID {
+			return &registries[i], nil
+		}
+	}
+	return nil, fmt.Errorf("registry not found: %s", registryID)
+}
+
+// GetRegistryByName fetches a single registry by name
+func (c *Client) GetRegistryByName(ctx context.Context, name string) (*Registry, error) {
+	registries, err := c.GetRegistries(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range registries {
+		if registries[i].RegistryName == name {
+			return &registries[i], nil
+		}
+	}
+	return nil, fmt.Errorf("registry not found: %s", name)
+}
+
+// CreateRegistryRequest represents the request body for creating a registry
+type CreateRegistryRequest struct {
+	RegistryName   string  `json:"registryName"`
+	Username       string  `json:"username"`
+	Password       string  `json:"password"`
+	RegistryURL    string  `json:"registryUrl"`
+	ImagePrefix    *string `json:"imagePrefix,omitempty"`
+	RegistryType   string  `json:"registryType"` // "selfHosted", "docker", "github", etc.
+	OrganizationID string  `json:"organizationId"`
+}
+
+// CreateRegistryResponse represents the response from creating a registry
+type CreateRegistryResponse struct {
+	RegistryID string `json:"registryId"`
+}
+
+// UpdateRegistryRequest represents the request body for updating a registry
+type UpdateRegistryRequest struct {
+	RegistryID   string  `json:"registryId"`
+	RegistryName *string `json:"registryName,omitempty"`
+	Username     *string `json:"username,omitempty"`
+	Password     *string `json:"password,omitempty"`
+	RegistryURL  *string `json:"registryUrl,omitempty"`
+	ImagePrefix  *string `json:"imagePrefix,omitempty"`
+}
+
+// DeleteRegistryRequest represents the request body for deleting a registry
+type DeleteRegistryRequest struct {
+	RegistryID string `json:"registryId"`
+}
+
+// CreateRegistry creates a new container registry
+func (c *Client) CreateRegistry(ctx context.Context, req CreateRegistryRequest) (*CreateRegistryResponse, error) {
+	data, err := c.doPostRequest(ctx, "/registry.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating registry: %w", err)
+	}
+	var resp CreateRegistryResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create registry response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateRegistry updates an existing registry
+func (c *Client) UpdateRegistry(ctx context.Context, req UpdateRegistryRequest) error {
+	_, err := c.doPostRequest(ctx, "/registry.update", req)
+	if err != nil {
+		return fmt.Errorf("updating registry: %w", err)
+	}
+	return nil
+}
+
+// DeleteRegistry deletes a registry
+func (c *Client) DeleteRegistry(ctx context.Context, registryID string) error {
+	req := DeleteRegistryRequest{RegistryID: registryID}
+	_, err := c.doPostRequest(ctx, "/registry.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting registry: %w", err)
+	}
+	return nil
+}
+
 // GetCertificates fetches all SSL certificates
 func (c *Client) GetCertificates(ctx context.Context) ([]Certificate, error) {
 	data, err := c.doRequest(ctx, "/certificates.all")
@@ -268,6 +359,94 @@ func (c *Client) GetCertificates(ctx context.Context) ([]Certificate, error) {
 	return certificates, nil
 }
 
+// GetCertificate fetches a single certificate by ID
+func (c *Client) GetCertificate(ctx context.Context, certificateID string) (*Certificate, error) {
+	certificates, err := c.GetCertificates(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range certificates {
+		if certificates[i].CertificateID == certificateID {
+			return &certificates[i], nil
+		}
+	}
+	return nil, fmt.Errorf("certificate not found: %s", certificateID)
+}
+
+// GetCertificateByName fetches a single certificate by name
+func (c *Client) GetCertificateByName(ctx context.Context, name string) (*Certificate, error) {
+	certificates, err := c.GetCertificates(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range certificates {
+		if certificates[i].Name == name {
+			return &certificates[i], nil
+		}
+	}
+	return nil, fmt.Errorf("certificate not found: %s", name)
+}
+
+// CreateCertificateRequest represents the request body for creating a certificate
+type CreateCertificateRequest struct {
+	Name            string `json:"name"`
+	CertificateData string `json:"certificateData"`
+	PrivateKey      string `json:"privateKey"`
+	AutoRenew       *bool  `json:"autoRenew,omitempty"`
+	OrganizationID  string `json:"organizationId"`
+}
+
+// CreateCertificateResponse represents the response from creating a certificate
+type CreateCertificateResponse struct {
+	CertificateID string `json:"certificateId"`
+}
+
+// UpdateCertificateRequest represents the request body for updating a certificate
+type UpdateCertificateRequest struct {
+	CertificateID   string  `json:"certificateId"`
+	Name            *string `json:"name,omitempty"`
+	CertificateData *string `json:"certificateData,omitempty"`
+	PrivateKey      *string `json:"privateKey,omitempty"`
+	AutoRenew       *bool   `json:"autoRenew,omitempty"`
+}
+
+// DeleteCertificateRequest represents the request body for deleting a certificate
+type DeleteCertificateRequest struct {
+	CertificateID string `json:"certificateId"`
+}
+
+// CreateCertificate creates a new SSL certificate
+func (c *Client) CreateCertificate(ctx context.Context, req CreateCertificateRequest) (*CreateCertificateResponse, error) {
+	data, err := c.doPostRequest(ctx, "/certificates.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating certificate: %w", err)
+	}
+	var resp CreateCertificateResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create certificate response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateCertificate updates an existing certificate
+func (c *Client) UpdateCertificate(ctx context.Context, req UpdateCertificateRequest) error {
+	_, err := c.doPostRequest(ctx, "/certificates.update", req)
+	if err != nil {
+		return fmt.Errorf("updating certificate: %w", err)
+	}
+	return nil
+}
+
+// DeleteCertificate deletes a certificate
+func (c *Client) DeleteCertificate(ctx context.Context, certificateID string) error {
+	req := DeleteCertificateRequest{CertificateID: certificateID}
+	_, err := c.doPostRequest(ctx, "/certificates.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting certificate: %w", err)
+	}
+	return nil
+}
+
 // GetDestinations fetches all backup destinations
 func (c *Client) GetDestinations(ctx context.Context) ([]Destination, error) {
 	data, err := c.doRequest(ctx, "/destination.all")
@@ -281,6 +460,98 @@ func (c *Client) GetDestinations(ctx context.Context) ([]Destination, error) {
 	}
 
 	return destinations, nil
+}
+
+// GetDestination fetches a single destination by ID
+func (c *Client) GetDestination(ctx context.Context, destinationID string) (*Destination, error) {
+	destinations, err := c.GetDestinations(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range destinations {
+		if destinations[i].DestinationID == destinationID {
+			return &destinations[i], nil
+		}
+	}
+	return nil, fmt.Errorf("destination not found: %s", destinationID)
+}
+
+// GetDestinationByName fetches a single destination by name
+func (c *Client) GetDestinationByName(ctx context.Context, name string) (*Destination, error) {
+	destinations, err := c.GetDestinations(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range destinations {
+		if destinations[i].Name == name {
+			return &destinations[i], nil
+		}
+	}
+	return nil, fmt.Errorf("destination not found: %s", name)
+}
+
+// CreateDestinationRequest represents the request body for creating a destination
+type CreateDestinationRequest struct {
+	Name            string `json:"name"`
+	AccessKey       string `json:"accessKey"`
+	SecretAccessKey string `json:"secretAccessKey"`
+	Bucket          string `json:"bucket"`
+	Region          string `json:"region"`
+	Endpoint        string `json:"endpoint"`
+	OrganizationID  string `json:"organizationId"`
+}
+
+// CreateDestinationResponse represents the response from creating a destination
+type CreateDestinationResponse struct {
+	DestinationID string `json:"destinationId"`
+}
+
+// UpdateDestinationRequest represents the request body for updating a destination
+type UpdateDestinationRequest struct {
+	DestinationID   string  `json:"destinationId"`
+	Name            *string `json:"name,omitempty"`
+	AccessKey       *string `json:"accessKey,omitempty"`
+	SecretAccessKey *string `json:"secretAccessKey,omitempty"`
+	Bucket          *string `json:"bucket,omitempty"`
+	Region          *string `json:"region,omitempty"`
+	Endpoint        *string `json:"endpoint,omitempty"`
+}
+
+// DeleteDestinationRequest represents the request body for deleting a destination
+type DeleteDestinationRequest struct {
+	DestinationID string `json:"destinationId"`
+}
+
+// CreateDestination creates a new backup destination
+func (c *Client) CreateDestination(ctx context.Context, req CreateDestinationRequest) (*CreateDestinationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/destination.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating destination: %w", err)
+	}
+	var resp CreateDestinationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create destination response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateDestination updates an existing destination
+func (c *Client) UpdateDestination(ctx context.Context, req UpdateDestinationRequest) error {
+	_, err := c.doPostRequest(ctx, "/destination.update", req)
+	if err != nil {
+		return fmt.Errorf("updating destination: %w", err)
+	}
+	return nil
+}
+
+// DeleteDestination deletes a destination
+func (c *Client) DeleteDestination(ctx context.Context, destinationID string) error {
+	req := DeleteDestinationRequest{DestinationID: destinationID}
+	_, err := c.doPostRequest(ctx, "/destination.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting destination: %w", err)
+	}
+	return nil
 }
 
 // GetNotifications fetches all notification configurations
