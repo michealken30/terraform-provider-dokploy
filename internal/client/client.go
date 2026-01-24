@@ -2530,3 +2530,259 @@ func (c *Client) DeleteOrganization(ctx context.Context, organizationID string) 
 	req := DeleteOrganizationRequest{OrganizationID: organizationID}
 	return c.doDeleteRequest(ctx, "/organization.delete", req)
 }
+
+// --- GitLab Provider ---
+
+// CreateGitlabRequest is the request to create a GitLab provider
+type CreateGitlabRequest struct {
+	Name         string  `json:"name"`
+	GitlabURL    string  `json:"gitlabUrl"`
+	AuthID       string  `json:"authId"`
+	ApplicationID *string `json:"applicationId,omitempty"`
+	RedirectURI  *string `json:"redirectUri,omitempty"`
+	Secret       *string `json:"secret,omitempty"`
+	AccessToken  *string `json:"accessToken,omitempty"`
+	RefreshToken *string `json:"refreshToken,omitempty"`
+	GroupName    *string `json:"groupName,omitempty"`
+	ExpiresAt    *int64  `json:"expiresAt,omitempty"`
+}
+
+// UpdateGitlabRequest is the request to update a GitLab provider
+type UpdateGitlabRequest struct {
+	GitlabID      string  `json:"gitlabId"`
+	GitProviderID string  `json:"gitProviderId"`
+	Name          string  `json:"name"`
+	GitlabURL     string  `json:"gitlabUrl"`
+	ApplicationID *string `json:"applicationId,omitempty"`
+	RedirectURI   *string `json:"redirectUri,omitempty"`
+	Secret        *string `json:"secret,omitempty"`
+	AccessToken   *string `json:"accessToken,omitempty"`
+	RefreshToken  *string `json:"refreshToken,omitempty"`
+	GroupName     *string `json:"groupName,omitempty"`
+	ExpiresAt     *int64  `json:"expiresAt,omitempty"`
+}
+
+// GitlabResponse is the response when fetching a GitLab provider
+type GitlabResponse struct {
+	GitlabID      string  `json:"gitlabId"`
+	GitProviderID string  `json:"gitProviderId"`
+	Name          string  `json:"name"`
+	GitlabURL     string  `json:"gitlabUrl"`
+	ApplicationID *string `json:"applicationId,omitempty"`
+	RedirectURI   *string `json:"redirectUri,omitempty"`
+	Secret        *string `json:"secret,omitempty"`
+	AccessToken   *string `json:"accessToken,omitempty"`
+	RefreshToken  *string `json:"refreshToken,omitempty"`
+	GroupName     *string `json:"groupName,omitempty"`
+	ExpiresAt     *int64  `json:"expiresAt,omitempty"`
+}
+
+// CreateGitlab creates a new GitLab provider
+func (c *Client) CreateGitlab(ctx context.Context, req CreateGitlabRequest) (*GitlabResponse, error) {
+	data, err := c.doPostRequest(ctx, "/gitlab.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating gitlab provider: %w", err)
+	}
+	var resp GitlabResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create gitlab response: %w", err)
+	}
+	return &resp, nil
+}
+
+// GetGitlab fetches a GitLab provider by ID
+func (c *Client) GetGitlab(ctx context.Context, gitlabID string) (*GitlabResponse, error) {
+	endpoint := fmt.Sprintf("/gitlab.one?gitlabId=%s", gitlabID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching gitlab provider: %w", err)
+	}
+	var resp GitlabResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing gitlab response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateGitlab updates an existing GitLab provider
+func (c *Client) UpdateGitlab(ctx context.Context, req UpdateGitlabRequest) error {
+	_, err := c.doPostRequest(ctx, "/gitlab.update", req)
+	if err != nil {
+		return fmt.Errorf("updating gitlab provider: %w", err)
+	}
+	return nil
+}
+
+// DeleteGitProvider deletes a git provider (used for gitlab, bitbucket, gitea)
+func (c *Client) DeleteGitProvider(ctx context.Context, gitProviderID string) error {
+	req := struct {
+		GitProviderID string `json:"gitProviderId"`
+	}{GitProviderID: gitProviderID}
+	_, err := c.doPostRequest(ctx, "/gitProvider.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting git provider: %w", err)
+	}
+	return nil
+}
+
+// --- Bitbucket Provider ---
+
+// CreateBitbucketRequest is the request to create a Bitbucket provider
+type CreateBitbucketRequest struct {
+	Name                   string  `json:"name"`
+	AuthID                 string  `json:"authId"`
+	BitbucketUsername      *string `json:"bitbucketUsername,omitempty"`
+	BitbucketEmail         *string `json:"bitbucketEmail,omitempty"`
+	AppPassword            *string `json:"appPassword,omitempty"`
+	ApiToken               *string `json:"apiToken,omitempty"`
+	BitbucketWorkspaceName *string `json:"bitbucketWorkspaceName,omitempty"`
+}
+
+// UpdateBitbucketRequest is the request to update a Bitbucket provider
+type UpdateBitbucketRequest struct {
+	BitbucketID            string  `json:"bitbucketId"`
+	GitProviderID          string  `json:"gitProviderId"`
+	Name                   string  `json:"name"`
+	BitbucketUsername      *string `json:"bitbucketUsername,omitempty"`
+	BitbucketEmail         *string `json:"bitbucketEmail,omitempty"`
+	AppPassword            *string `json:"appPassword,omitempty"`
+	ApiToken               *string `json:"apiToken,omitempty"`
+	BitbucketWorkspaceName *string `json:"bitbucketWorkspaceName,omitempty"`
+	OrganizationID         *string `json:"organizationId,omitempty"`
+}
+
+// BitbucketResponse is the response when fetching a Bitbucket provider
+type BitbucketResponse struct {
+	BitbucketID            string  `json:"bitbucketId"`
+	GitProviderID          string  `json:"gitProviderId"`
+	Name                   string  `json:"name"`
+	BitbucketUsername      *string `json:"bitbucketUsername,omitempty"`
+	BitbucketEmail         *string `json:"bitbucketEmail,omitempty"`
+	AppPassword            *string `json:"appPassword,omitempty"`
+	ApiToken               *string `json:"apiToken,omitempty"`
+	BitbucketWorkspaceName *string `json:"bitbucketWorkspaceName,omitempty"`
+	OrganizationID         *string `json:"organizationId,omitempty"`
+}
+
+// CreateBitbucket creates a new Bitbucket provider
+func (c *Client) CreateBitbucket(ctx context.Context, req CreateBitbucketRequest) (*BitbucketResponse, error) {
+	data, err := c.doPostRequest(ctx, "/bitbucket.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating bitbucket provider: %w", err)
+	}
+	var resp BitbucketResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create bitbucket response: %w", err)
+	}
+	return &resp, nil
+}
+
+// GetBitbucket fetches a Bitbucket provider by ID
+func (c *Client) GetBitbucket(ctx context.Context, bitbucketID string) (*BitbucketResponse, error) {
+	endpoint := fmt.Sprintf("/bitbucket.one?bitbucketId=%s", bitbucketID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching bitbucket provider: %w", err)
+	}
+	var resp BitbucketResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing bitbucket response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateBitbucket updates an existing Bitbucket provider
+func (c *Client) UpdateBitbucket(ctx context.Context, req UpdateBitbucketRequest) error {
+	_, err := c.doPostRequest(ctx, "/bitbucket.update", req)
+	if err != nil {
+		return fmt.Errorf("updating bitbucket provider: %w", err)
+	}
+	return nil
+}
+
+// --- Gitea Provider ---
+
+// CreateGiteaRequest is the request to create a Gitea provider
+type CreateGiteaRequest struct {
+	Name             string  `json:"name"`
+	GiteaURL         string  `json:"giteaUrl"`
+	RedirectURI      *string `json:"redirectUri,omitempty"`
+	ClientID         *string `json:"clientId,omitempty"`
+	ClientSecret     *string `json:"clientSecret,omitempty"`
+	AccessToken      *string `json:"accessToken,omitempty"`
+	RefreshToken     *string `json:"refreshToken,omitempty"`
+	ExpiresAt        *int64  `json:"expiresAt,omitempty"`
+	Scopes           *string `json:"scopes,omitempty"`
+	GiteaUsername    *string `json:"giteaUsername,omitempty"`
+	OrganizationName *string `json:"organizationName,omitempty"`
+}
+
+// UpdateGiteaRequest is the request to update a Gitea provider
+type UpdateGiteaRequest struct {
+	GiteaID          string  `json:"giteaId"`
+	GitProviderID    string  `json:"gitProviderId"`
+	Name             string  `json:"name"`
+	GiteaURL         string  `json:"giteaUrl"`
+	RedirectURI      *string `json:"redirectUri,omitempty"`
+	ClientID         *string `json:"clientId,omitempty"`
+	ClientSecret     *string `json:"clientSecret,omitempty"`
+	AccessToken      *string `json:"accessToken,omitempty"`
+	RefreshToken     *string `json:"refreshToken,omitempty"`
+	ExpiresAt        *int64  `json:"expiresAt,omitempty"`
+	Scopes           *string `json:"scopes,omitempty"`
+	GiteaUsername    *string `json:"giteaUsername,omitempty"`
+	OrganizationName *string `json:"organizationName,omitempty"`
+}
+
+// GiteaResponse is the response when fetching a Gitea provider
+type GiteaResponse struct {
+	GiteaID          string  `json:"giteaId"`
+	GitProviderID    string  `json:"gitProviderId"`
+	Name             string  `json:"name"`
+	GiteaURL         string  `json:"giteaUrl"`
+	RedirectURI      *string `json:"redirectUri,omitempty"`
+	ClientID         *string `json:"clientId,omitempty"`
+	ClientSecret     *string `json:"clientSecret,omitempty"`
+	AccessToken      *string `json:"accessToken,omitempty"`
+	RefreshToken     *string `json:"refreshToken,omitempty"`
+	ExpiresAt        *int64  `json:"expiresAt,omitempty"`
+	Scopes           *string `json:"scopes,omitempty"`
+	GiteaUsername    *string `json:"giteaUsername,omitempty"`
+	OrganizationName *string `json:"organizationName,omitempty"`
+}
+
+// CreateGitea creates a new Gitea provider
+func (c *Client) CreateGitea(ctx context.Context, req CreateGiteaRequest) (*GiteaResponse, error) {
+	data, err := c.doPostRequest(ctx, "/gitea.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating gitea provider: %w", err)
+	}
+	var resp GiteaResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create gitea response: %w", err)
+	}
+	return &resp, nil
+}
+
+// GetGitea fetches a Gitea provider by ID
+func (c *Client) GetGitea(ctx context.Context, giteaID string) (*GiteaResponse, error) {
+	endpoint := fmt.Sprintf("/gitea.one?giteaId=%s", giteaID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching gitea provider: %w", err)
+	}
+	var resp GiteaResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing gitea response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateGitea updates an existing Gitea provider
+func (c *Client) UpdateGitea(ctx context.Context, req UpdateGiteaRequest) error {
+	_, err := c.doPostRequest(ctx, "/gitea.update", req)
+	if err != nil {
+		return fmt.Errorf("updating gitea provider: %w", err)
+	}
+	return nil
+}

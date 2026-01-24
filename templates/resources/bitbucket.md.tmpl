@@ -1,0 +1,35 @@
+---
+page_title: "dokploy_bitbucket Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy Bitbucket provider integration.
+---
+
+# dokploy_bitbucket (Resource)
+
+Manages a Dokploy Bitbucket provider integration. Allows connecting to Bitbucket Cloud for source code access.
+
+## Example Usage
+
+{{ tffile "examples/resources/bitbucket/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Bitbucket providers can be imported using their Bitbucket ID:
+
+```shell
+terraform import dokploy_bitbucket.example abc123-bitbucket-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_bitbucket.example
+  id = "abc123-bitbucket-id"
+}
+```
+
+~> **Note:** Sensitive fields like `app_password` and `api_token` will not be readable after import. You will need to set these values in your configuration after import.

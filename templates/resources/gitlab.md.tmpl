@@ -1,0 +1,35 @@
+---
+page_title: "dokploy_gitlab Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy GitLab provider integration.
+---
+
+# dokploy_gitlab (Resource)
+
+Manages a Dokploy GitLab provider integration. Allows connecting to GitLab (cloud or self-hosted) for source code access.
+
+## Example Usage
+
+{{ tffile "examples/resources/gitlab/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+GitLab providers can be imported using their GitLab ID:
+
+```shell
+terraform import dokploy_gitlab.example abc123-gitlab-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_gitlab.example
+  id = "abc123-gitlab-id"
+}
+```
+
+~> **Note:** Sensitive fields like `secret`, `access_token`, and `refresh_token` will not be readable after import. You will need to set these values in your configuration after import.

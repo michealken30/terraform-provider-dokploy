@@ -1,0 +1,35 @@
+---
+page_title: "dokploy_gitea Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy Gitea provider integration.
+---
+
+# dokploy_gitea (Resource)
+
+Manages a Dokploy Gitea provider integration. Allows connecting to self-hosted Gitea instances for source code access.
+
+## Example Usage
+
+{{ tffile "examples/resources/gitea/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Gitea providers can be imported using their Gitea ID:
+
+```shell
+terraform import dokploy_gitea.example abc123-gitea-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_gitea.example
+  id = "abc123-gitea-id"
+}
+```
+
+~> **Note:** Sensitive fields like `client_secret`, `access_token`, and `refresh_token` will not be readable after import. You will need to set these values in your configuration after import.

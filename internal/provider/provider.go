@@ -28,12 +28,15 @@ import (
 	// Resources
 	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
 	backuprs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/backup"
+	bitbucketrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/bitbucket"
 	bootstraprs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/bootstrap"
 	certificaters "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/certificate"
 	composers "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/compose"
 	destinationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/destination"
 	domainrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/domain"
 	environmentrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/environment"
+	gitears "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/gitea"
+	gitlabrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/gitlab"
 	mariadbrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mariadb"
 	mongors "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mongo"
 	mountrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mount"
@@ -162,6 +165,9 @@ func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resou
 		schedulers.NewResource,
 		notificationrs.NewResource,
 		organizationrs.NewResource,
+		gitlabrs.NewResource,
+		bitbucketrs.NewResource,
+		gitears.NewResource,
 	}
 }
 
