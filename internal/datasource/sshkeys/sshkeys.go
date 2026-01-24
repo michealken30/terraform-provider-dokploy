@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/client"
+	"github.com/thefrozenfire/terraform-provider-dokploy/internal/client"
 )
 
 // Ensure the implementation satisfies the expected interfaces.

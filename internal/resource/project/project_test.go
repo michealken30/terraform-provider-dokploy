@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/acctest"
+	"github.com/thefrozenfire/terraform-provider-dokploy/internal/acctest"
 )
 
 func TestAccProjectResource_basic(t *testing.T) {

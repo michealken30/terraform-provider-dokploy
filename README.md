@@ -1,7 +1,7 @@
 # Terraform Provider for Dokploy
 
-[![Tests](https://github.com/reserve-protocol/terraform-provider-dokploy/actions/workflows/test.yml/badge.svg)](https://github.com/reserve-protocol/terraform-provider-dokploy/actions/workflows/test.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/reserve-protocol/terraform-provider-dokploy)](https://goreportcard.com/report/github.com/reserve-protocol/terraform-provider-dokploy)
+[![Tests](https://github.com/thefrozenfire/terraform-provider-dokploy/actions/workflows/test.yml/badge.svg)](https://github.com/thefrozenfire/terraform-provider-dokploy/actions/workflows/test.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thefrozenfire/terraform-provider-dokploy)](https://goreportcard.com/report/github.com/thefrozenfire/terraform-provider-dokploy)
 
 The Dokploy provider allows you to manage [Dokploy](https://dokploy.com) infrastructure as code. Dokploy is an open-source, self-hostable Platform as a Service (PaaS) that simplifies deploying applications, databases, and Docker Compose stacks.
 
@@ -19,7 +19,7 @@ The Dokploy provider allows you to manage [Dokploy](https://dokploy.com) infrast
 terraform {
   required_providers {
     dokploy = {
-      source  = "reserve-protocol/dokploy"
+      source  = "thefrozenfire/dokploy"
       version = "~> 0.1"
     }
   }
@@ -29,7 +29,7 @@ terraform {
 ### From Source
 
 ```bash
-git clone https://github.com/reserve-protocol/terraform-provider-dokploy.git
+git clone https://github.com/thefrozenfire/terraform-provider-dokploy.git
 cd terraform-provider-dokploy
 make install
 ```

@@ -1,4 +1,4 @@
-module github.com/reserve-protocol/terraform-provider-dokploy
+module github.com/thefrozenfire/terraform-provider-dokploy
 
 go 1.24.0
 

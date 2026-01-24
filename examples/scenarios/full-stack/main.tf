@@ -4,7 +4,7 @@
 terraform {
   required_providers {
     dokploy = {
-      source  = "reserve-protocol/dokploy"
+      source  = "thefrozenfire/dokploy"
       version = "~> 0.1"
     }
   }

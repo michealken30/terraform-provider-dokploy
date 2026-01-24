@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	"github.com/reserve-protocol/terraform-provider-dokploy/internal/provider"
+	"github.com/thefrozenfire/terraform-provider-dokploy/internal/provider"
 )
 
 // ProtoV6ProviderFactories returns provider factories for acceptance tests.

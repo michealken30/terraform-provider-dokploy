@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     dokploy = {
-      source = "registry.terraform.io/reserve-protocol/dokploy"
+      source = "registry.terraform.io/thefrozenfire/dokploy"
     }
   }
 }

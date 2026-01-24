@@ -1,6 +1,6 @@
 # Provider development settings
 HOSTNAME=registry.terraform.io
-NAMESPACE=reserve-protocol
+NAMESPACE=thefrozenfire
 NAME=dokploy
 BINARY=terraform-provider-${NAME}
 VERSION=0.1.0
