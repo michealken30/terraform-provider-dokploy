@@ -2904,3 +2904,122 @@ func (c *Client) AssignUserPermissions(ctx context.Context, req UserPermissionsR
 	}
 	return nil
 }
+
+// --- Volume Backups ---
+
+// VolumeBackup represents a volume backup configuration
+type VolumeBackup struct {
+	VolumeBackupID  string  `json:"volumeBackupId"`
+	Name            string  `json:"name"`
+	VolumeName      string  `json:"volumeName"`
+	Prefix          string  `json:"prefix"`
+	CronExpression  string  `json:"cronExpression"`
+	DestinationID   string  `json:"destinationId"`
+	ServiceType     *string `json:"serviceType,omitempty"`
+	AppName         *string `json:"appName,omitempty"`
+	ServiceName     *string `json:"serviceName,omitempty"`
+	TurnOff         *bool   `json:"turnOff,omitempty"`
+	KeepLatestCount *int    `json:"keepLatestCount,omitempty"`
+	Enabled         *bool   `json:"enabled,omitempty"`
+	ApplicationID   *string `json:"applicationId,omitempty"`
+	PostgresID      *string `json:"postgresId,omitempty"`
+	MysqlID         *string `json:"mysqlId,omitempty"`
+	MariadbID       *string `json:"mariadbId,omitempty"`
+	MongoID         *string `json:"mongoId,omitempty"`
+	RedisID         *string `json:"redisId,omitempty"`
+	ComposeID       *string `json:"composeId,omitempty"`
+	CreatedAt       *string `json:"createdAt,omitempty"`
+}
+
+// CreateVolumeBackupRequest is the request to create a volume backup
+type CreateVolumeBackupRequest struct {
+	Name            string  `json:"name"`
+	VolumeName      string  `json:"volumeName"`
+	Prefix          string  `json:"prefix"`
+	CronExpression  string  `json:"cronExpression"`
+	DestinationID   string  `json:"destinationId"`
+	ServiceType     *string `json:"serviceType,omitempty"`
+	AppName         *string `json:"appName,omitempty"`
+	ServiceName     *string `json:"serviceName,omitempty"`
+	TurnOff         *bool   `json:"turnOff,omitempty"`
+	KeepLatestCount *int    `json:"keepLatestCount,omitempty"`
+	Enabled         *bool   `json:"enabled,omitempty"`
+	ApplicationID   *string `json:"applicationId,omitempty"`
+	PostgresID      *string `json:"postgresId,omitempty"`
+	MysqlID         *string `json:"mysqlId,omitempty"`
+	MariadbID       *string `json:"mariadbId,omitempty"`
+	MongoID         *string `json:"mongoId,omitempty"`
+	RedisID         *string `json:"redisId,omitempty"`
+	ComposeID       *string `json:"composeId,omitempty"`
+}
+
+// UpdateVolumeBackupRequest is the request to update a volume backup
+type UpdateVolumeBackupRequest struct {
+	VolumeBackupID  string  `json:"volumeBackupId"`
+	Name            string  `json:"name"`
+	VolumeName      string  `json:"volumeName"`
+	Prefix          string  `json:"prefix"`
+	CronExpression  string  `json:"cronExpression"`
+	DestinationID   string  `json:"destinationId"`
+	ServiceType     *string `json:"serviceType,omitempty"`
+	AppName         *string `json:"appName,omitempty"`
+	ServiceName     *string `json:"serviceName,omitempty"`
+	TurnOff         *bool   `json:"turnOff,omitempty"`
+	KeepLatestCount *int    `json:"keepLatestCount,omitempty"`
+	Enabled         *bool   `json:"enabled,omitempty"`
+	ApplicationID   *string `json:"applicationId,omitempty"`
+	PostgresID      *string `json:"postgresId,omitempty"`
+	MysqlID         *string `json:"mysqlId,omitempty"`
+	MariadbID       *string `json:"mariadbId,omitempty"`
+	MongoID         *string `json:"mongoId,omitempty"`
+	RedisID         *string `json:"redisId,omitempty"`
+	ComposeID       *string `json:"composeId,omitempty"`
+}
+
+// CreateVolumeBackup creates a new volume backup configuration
+func (c *Client) CreateVolumeBackup(ctx context.Context, req CreateVolumeBackupRequest) (*VolumeBackup, error) {
+	data, err := c.doPostRequest(ctx, "/volumeBackups.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating volume backup: %w", err)
+	}
+	var resp VolumeBackup
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create volume backup response: %w", err)
+	}
+	return &resp, nil
+}
+
+// GetVolumeBackup fetches a volume backup by ID
+func (c *Client) GetVolumeBackup(ctx context.Context, volumeBackupID string) (*VolumeBackup, error) {
+	endpoint := fmt.Sprintf("/volumeBackups.one?volumeBackupId=%s", volumeBackupID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching volume backup: %w", err)
+	}
+	var resp VolumeBackup
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing volume backup response: %w", err)
+	}
+	return &resp, nil
+}
+
+// UpdateVolumeBackup updates an existing volume backup configuration
+func (c *Client) UpdateVolumeBackup(ctx context.Context, req UpdateVolumeBackupRequest) error {
+	_, err := c.doPostRequest(ctx, "/volumeBackups.update", req)
+	if err != nil {
+		return fmt.Errorf("updating volume backup: %w", err)
+	}
+	return nil
+}
+
+// DeleteVolumeBackup deletes a volume backup configuration
+func (c *Client) DeleteVolumeBackup(ctx context.Context, volumeBackupID string) error {
+	req := struct {
+		VolumeBackupID string `json:"volumeBackupId"`
+	}{VolumeBackupID: volumeBackupID}
+	_, err := c.doPostRequest(ctx, "/volumeBackups.delete", req)
+	if err != nil {
+		return fmt.Errorf("deleting volume backup: %w", err)
+	}
+	return nil
+}

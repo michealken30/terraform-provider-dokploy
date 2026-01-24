@@ -1,0 +1,35 @@
+---
+page_title: "dokploy_volume_backup Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy volume backup configuration.
+---
+
+# dokploy_volume_backup (Resource)
+
+Manages a Dokploy volume backup configuration. This resource backs up Docker volumes to a storage destination on a schedule.
+
+~> **Note:** This is different from `dokploy_backup` which performs database-specific backups (pg_dump, mysqldump, etc.). Volume backups copy the raw Docker volume data and work with any service type.
+
+## Example Usage
+
+{{ tffile "examples/resources/volume_backup/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Volume backups can be imported using their ID:
+
+```shell
+terraform import dokploy_volume_backup.example abc123-volume-backup-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_volume_backup.example
+  id = "abc123-volume-backup-id"
+}
+```

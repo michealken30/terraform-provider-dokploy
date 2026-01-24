@@ -54,6 +54,7 @@ import (
 	serverrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/server"
 	sshkeyrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/sshkey"
 	userpermissionsrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/userpermissions"
+	volumebackuprs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/volumebackup"
 )
 
 // Ensure DokployProvider satisfies various provider interfaces.
@@ -170,6 +171,7 @@ func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resou
 		bitbucketrs.NewResource,
 		gitears.NewResource,
 		userpermissionsrs.NewResource,
+		volumebackuprs.NewResource,
 	}
 }
 
