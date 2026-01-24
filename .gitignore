@@ -10,3 +10,4 @@ tools/hcl-generator/generated/
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+coverage.out

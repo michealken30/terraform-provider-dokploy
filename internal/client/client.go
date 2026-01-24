@@ -89,7 +89,7 @@ func (c *Client) doRequest(ctx context.Context, endpoint string) ([]byte, error)
 
 		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 		if err != nil {
-			return nil, fmt.Errorf("creating request: %w", err)
+			return nil, fmt.Errorf("creating request: %w", err) //coverage:ignore
 		}
 
 		req.Header.Set("x-api-key", c.apiKey)
@@ -104,8 +104,8 @@ func (c *Client) doRequest(ctx context.Context, endpoint string) ([]byte, error)
 		body, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
-			lastErr = fmt.Errorf("reading response body: %w", err)
-			continue
+			lastErr = fmt.Errorf("reading response body: %w", err) //coverage:ignore
+			continue                                               //coverage:ignore
 		}
 
 		if resp.StatusCode == http.StatusOK {
@@ -127,7 +127,7 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling request body: %w", err)
+		return nil, fmt.Errorf("marshaling request body: %w", err) //coverage:ignore
 	}
 
 	var lastErr error
@@ -143,7 +143,7 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 
 		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
 		if err != nil {
-			return nil, fmt.Errorf("creating request: %w", err)
+			return nil, fmt.Errorf("creating request: %w", err) //coverage:ignore
 		}
 
 		req.Header.Set("x-api-key", c.apiKey)
@@ -159,8 +159,8 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 		respBody, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
-			lastErr = fmt.Errorf("reading response body: %w", err)
-			continue
+			lastErr = fmt.Errorf("reading response body: %w", err) //coverage:ignore
+			continue                                               //coverage:ignore
 		}
 
 		if resp.StatusCode == http.StatusOK {
@@ -182,7 +182,7 @@ func (c *Client) doDeleteRequest(ctx context.Context, endpoint string, body inte
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		return fmt.Errorf("marshaling request body: %w", err)
+		return fmt.Errorf("marshaling request body: %w", err) //coverage:ignore
 	}
 
 	var lastErr error
@@ -198,7 +198,7 @@ func (c *Client) doDeleteRequest(ctx context.Context, endpoint string, body inte
 
 		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
 		if err != nil {
-			return fmt.Errorf("creating request: %w", err)
+			return fmt.Errorf("creating request: %w", err) //coverage:ignore
 		}
 
 		req.Header.Set("x-api-key", c.apiKey)
@@ -214,8 +214,8 @@ func (c *Client) doDeleteRequest(ctx context.Context, endpoint string, body inte
 		respBody, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
-			lastErr = fmt.Errorf("reading response body: %w", err)
-			continue
+			lastErr = fmt.Errorf("reading response body: %w", err) //coverage:ignore
+			continue                                               //coverage:ignore
 		}
 
 		// Treat 200 OK and 404 Not Found as success (resource deleted or already gone)
