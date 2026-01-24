@@ -13,7 +13,6 @@ func TestAccPostgresResource_basic(t *testing.T) {
 	projectName := acctest.RandomName("project")
 	envName := acctest.RandomName("env")
 	dbName := acctest.RandomName("postgres")
-	appName := acctest.RandomName("pgapp")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -21,7 +20,7 @@ func TestAccPostgresResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: acctest.ConfigPostgres(projectName, envName, dbName, appName, "testuser", "testpass123"),
+				Config: acctest.ConfigPostgres(projectName, envName, dbName, "testuser", "testpass123"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("dokploy_postgres.test", "name", dbName),
 					resource.TestCheckResourceAttr("dokploy_postgres.test", "database_user", "testuser"),
@@ -45,7 +44,6 @@ func TestAccPostgresResource_update(t *testing.T) {
 	projectName := acctest.RandomName("project")
 	envName := acctest.RandomName("env")
 	dbName := acctest.RandomName("postgres")
-	appName := acctest.RandomName("pgapp")
 	updatedDbName := acctest.RandomName("postgres-updated")
 
 	resource.Test(t, resource.TestCase{
@@ -54,14 +52,14 @@ func TestAccPostgresResource_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create
 			{
-				Config: acctest.ConfigPostgres(projectName, envName, dbName, appName, "testuser", "testpass123"),
+				Config: acctest.ConfigPostgres(projectName, envName, dbName, "testuser", "testpass123"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("dokploy_postgres.test", "name", dbName),
 				),
 			},
 			// Update name
 			{
-				Config: acctest.ConfigPostgres(projectName, envName, updatedDbName, appName, "testuser", "testpass123"),
+				Config: acctest.ConfigPostgres(projectName, envName, updatedDbName, "testuser", "testpass123"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("dokploy_postgres.test", "name", updatedDbName),
 				),
@@ -75,14 +73,13 @@ func TestAccPostgresResource_import(t *testing.T) {
 	projectName := acctest.RandomName("project")
 	envName := acctest.RandomName("env")
 	dbName := acctest.RandomName("postgres")
-	appName := acctest.RandomName("pgapp")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigPostgres(projectName, envName, dbName, appName, "testuser", "testpass123"),
+				Config: acctest.ConfigPostgres(projectName, envName, dbName, "testuser", "testpass123"),
 			},
 			{
 				ResourceName:            "dokploy_postgres.test",

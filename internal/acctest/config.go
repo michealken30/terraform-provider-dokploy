@@ -79,7 +79,7 @@ resource "dokploy_application" "test" {
 }
 
 // ConfigPostgres returns Terraform configuration for a postgres resource.
-func ConfigPostgres(projectName, envName, dbName, appName, user, password string) string {
+func ConfigPostgres(projectName, envName, dbName, user, password string) string {
 	return fmt.Sprintf(`
 resource "dokploy_project" "test" {
   name = %q
@@ -92,13 +92,11 @@ resource "dokploy_environment" "test" {
 
 resource "dokploy_postgres" "test" {
   name              = %q
-  app_name          = %q
   environment_id    = dokploy_environment.test.id
-  database_name     = %q
   database_user     = %q
   database_password = %q
 }
-`, projectName, envName, dbName, appName, dbName, user, password)
+`, projectName, envName, dbName, user, password)
 }
 
 // ConfigCompose returns Terraform configuration for a compose resource.
