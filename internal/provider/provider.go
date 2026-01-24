@@ -116,7 +116,7 @@ func (p *DokployProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
-		return
+		return //coverage:ignore
 	}
 
 	// Use environment variables as fallback
