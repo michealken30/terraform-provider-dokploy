@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_organization Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy organization.
+---
+
+# dokploy_organization (Resource)
+
+Manages a Dokploy organization. Organizations are the top-level grouping for projects and resources.
+
+## Example Usage
+
+{{ tffile "examples/resources/organization/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Organizations can be imported using their ID:
+
+```shell
+terraform import dokploy_organization.example abc123-organization-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_organization.example
+  id = "abc123-organization-id"
+}
+```

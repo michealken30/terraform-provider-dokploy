@@ -1,0 +1,35 @@
+---
+page_title: "dokploy_notification Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy notification configuration (Slack, Discord, Telegram, or Email).
+---
+
+# dokploy_notification (Resource)
+
+Manages a Dokploy notification configuration. Supports Slack, Discord, Telegram, and Email notification providers.
+
+## Example Usage
+
+{{ tffile "examples/resources/notification/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Notifications can be imported using their ID:
+
+```shell
+terraform import dokploy_notification.example abc123-notification-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_notification.example
+  id = "abc123-notification-id"
+}
+```
+
+~> **Note:** Sensitive fields like webhook URLs, bot tokens, and passwords will not be readable after import. You will need to set these values in your configuration after import.

@@ -2232,3 +2232,301 @@ func (c *Client) DeleteSchedule(ctx context.Context, scheduleID string) error {
 	req := DeleteScheduleRequest{ScheduleID: scheduleID}
 	return c.doDeleteRequest(ctx, "/schedule.delete", req)
 }
+
+// =============================================================================
+// Notification CRUD Operations
+// =============================================================================
+
+// NotificationBase contains common fields for all notification types
+type NotificationBase struct {
+	Name            string `json:"name"`
+	AppDeploy       bool   `json:"appDeploy"`
+	AppBuildError   bool   `json:"appBuildError"`
+	DatabaseBackup  bool   `json:"databaseBackup"`
+	VolumeBackup    bool   `json:"volumeBackup"`
+	DokployRestart  bool   `json:"dokployRestart"`
+	DockerCleanup   bool   `json:"dockerCleanup"`
+	ServerThreshold bool   `json:"serverThreshold"`
+}
+
+// CreateSlackNotificationRequest represents the request for creating a Slack notification
+type CreateSlackNotificationRequest struct {
+	NotificationBase
+	WebhookURL string `json:"webhookUrl"`
+	Channel    string `json:"channel"`
+}
+
+// CreateDiscordNotificationRequest represents the request for creating a Discord notification
+type CreateDiscordNotificationRequest struct {
+	NotificationBase
+	WebhookURL string `json:"webhookUrl"`
+	Decoration bool   `json:"decoration"`
+}
+
+// CreateTelegramNotificationRequest represents the request for creating a Telegram notification
+type CreateTelegramNotificationRequest struct {
+	NotificationBase
+	BotToken        string `json:"botToken"`
+	ChatID          string `json:"chatId"`
+	MessageThreadID string `json:"messageThreadId"`
+}
+
+// CreateEmailNotificationRequest represents the request for creating an Email notification
+type CreateEmailNotificationRequest struct {
+	NotificationBase
+	SmtpServer  string   `json:"smtpServer"`
+	SmtpPort    int      `json:"smtpPort"`
+	Username    string   `json:"username"`
+	Password    string   `json:"password"`
+	FromAddress string   `json:"fromAddress"`
+	ToAddresses []string `json:"toAddresses"`
+}
+
+// UpdateSlackNotificationRequest represents the request for updating a Slack notification
+type UpdateSlackNotificationRequest struct {
+	NotificationID string `json:"notificationId"`
+	CreateSlackNotificationRequest
+}
+
+// UpdateDiscordNotificationRequest represents the request for updating a Discord notification
+type UpdateDiscordNotificationRequest struct {
+	NotificationID string `json:"notificationId"`
+	CreateDiscordNotificationRequest
+}
+
+// UpdateTelegramNotificationRequest represents the request for updating a Telegram notification
+type UpdateTelegramNotificationRequest struct {
+	NotificationID string `json:"notificationId"`
+	CreateTelegramNotificationRequest
+}
+
+// UpdateEmailNotificationRequest represents the request for updating an Email notification
+type UpdateEmailNotificationRequest struct {
+	NotificationID string `json:"notificationId"`
+	CreateEmailNotificationRequest
+}
+
+// CreateNotificationResponse represents the response from creating a notification
+type CreateNotificationResponse struct {
+	NotificationID string `json:"notificationId"`
+}
+
+// DeleteNotificationRequest represents the request for deleting a notification
+type DeleteNotificationRequest struct {
+	NotificationID string `json:"notificationId"`
+}
+
+// NotificationResponse represents a notification from the API
+type NotificationResponse struct {
+	NotificationID  string  `json:"notificationId"`
+	Name            string  `json:"name"`
+	NotificationType string `json:"notificationType"`
+	AppDeploy       bool    `json:"appDeploy"`
+	AppBuildError   bool    `json:"appBuildError"`
+	DatabaseBackup  bool    `json:"databaseBackup"`
+	VolumeBackup    bool    `json:"volumeBackup"`
+	DokployRestart  bool    `json:"dokployRestart"`
+	DockerCleanup   bool    `json:"dockerCleanup"`
+	ServerThreshold bool    `json:"serverThreshold"`
+	OrganizationID  string  `json:"organizationId"`
+	// Slack fields
+	WebhookURL *string `json:"webhookUrl,omitempty"`
+	Channel    *string `json:"channel,omitempty"`
+	// Discord fields
+	Decoration *bool `json:"decoration,omitempty"`
+	// Telegram fields
+	BotToken        *string `json:"botToken,omitempty"`
+	ChatID          *string `json:"chatId,omitempty"`
+	MessageThreadID *string `json:"messageThreadId,omitempty"`
+	// Email fields
+	SmtpServer  *string  `json:"smtpServer,omitempty"`
+	SmtpPort    *int     `json:"smtpPort,omitempty"`
+	Username    *string  `json:"username,omitempty"`
+	Password    *string  `json:"password,omitempty"`
+	FromAddress *string  `json:"fromAddress,omitempty"`
+	ToAddresses []string `json:"toAddresses,omitempty"`
+}
+
+// CreateSlackNotification creates a Slack notification
+func (c *Client) CreateSlackNotification(ctx context.Context, req CreateSlackNotificationRequest) (*CreateNotificationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/notification.createSlack", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating slack notification: %w", err)
+	}
+	var resp CreateNotificationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create notification response: %w", err)
+	}
+	return &resp, nil
+}
+
+// CreateDiscordNotification creates a Discord notification
+func (c *Client) CreateDiscordNotification(ctx context.Context, req CreateDiscordNotificationRequest) (*CreateNotificationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/notification.createDiscord", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating discord notification: %w", err)
+	}
+	var resp CreateNotificationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create notification response: %w", err)
+	}
+	return &resp, nil
+}
+
+// CreateTelegramNotification creates a Telegram notification
+func (c *Client) CreateTelegramNotification(ctx context.Context, req CreateTelegramNotificationRequest) (*CreateNotificationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/notification.createTelegram", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating telegram notification: %w", err)
+	}
+	var resp CreateNotificationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create notification response: %w", err)
+	}
+	return &resp, nil
+}
+
+// CreateEmailNotification creates an Email notification
+func (c *Client) CreateEmailNotification(ctx context.Context, req CreateEmailNotificationRequest) (*CreateNotificationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/notification.createEmail", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating email notification: %w", err)
+	}
+	var resp CreateNotificationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create notification response: %w", err)
+	}
+	return &resp, nil
+}
+
+// GetNotification fetches a single notification by ID
+func (c *Client) GetNotification(ctx context.Context, notificationID string) (*NotificationResponse, error) {
+	endpoint := fmt.Sprintf("/notification.one?notificationId=%s", notificationID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching notification: %w", err)
+	}
+	var notification NotificationResponse
+	if err := json.Unmarshal(data, &notification); err != nil {
+		return nil, fmt.Errorf("parsing notification: %w", err)
+	}
+	return &notification, nil
+}
+
+// UpdateSlackNotification updates a Slack notification
+func (c *Client) UpdateSlackNotification(ctx context.Context, req UpdateSlackNotificationRequest) error {
+	_, err := c.doPostRequest(ctx, "/notification.updateSlack", req)
+	if err != nil {
+		return fmt.Errorf("updating slack notification: %w", err)
+	}
+	return nil
+}
+
+// UpdateDiscordNotification updates a Discord notification
+func (c *Client) UpdateDiscordNotification(ctx context.Context, req UpdateDiscordNotificationRequest) error {
+	_, err := c.doPostRequest(ctx, "/notification.updateDiscord", req)
+	if err != nil {
+		return fmt.Errorf("updating discord notification: %w", err)
+	}
+	return nil
+}
+
+// UpdateTelegramNotification updates a Telegram notification
+func (c *Client) UpdateTelegramNotification(ctx context.Context, req UpdateTelegramNotificationRequest) error {
+	_, err := c.doPostRequest(ctx, "/notification.updateTelegram", req)
+	if err != nil {
+		return fmt.Errorf("updating telegram notification: %w", err)
+	}
+	return nil
+}
+
+// UpdateEmailNotification updates an Email notification
+func (c *Client) UpdateEmailNotification(ctx context.Context, req UpdateEmailNotificationRequest) error {
+	_, err := c.doPostRequest(ctx, "/notification.updateEmail", req)
+	if err != nil {
+		return fmt.Errorf("updating email notification: %w", err)
+	}
+	return nil
+}
+
+// DeleteNotification deletes a notification
+func (c *Client) DeleteNotification(ctx context.Context, notificationID string) error {
+	req := DeleteNotificationRequest{NotificationID: notificationID}
+	return c.doDeleteRequest(ctx, "/notification.remove", req)
+}
+
+// =============================================================================
+// Organization CRUD Operations
+// =============================================================================
+
+// CreateOrganizationRequest represents the request for creating an organization
+type CreateOrganizationRequest struct {
+	Name string  `json:"name"`
+	Logo *string `json:"logo,omitempty"`
+}
+
+// CreateOrganizationResponse represents the response from creating an organization
+type CreateOrganizationResponse struct {
+	OrganizationID string `json:"organizationId"`
+}
+
+// UpdateOrganizationRequest represents the request for updating an organization
+type UpdateOrganizationRequest struct {
+	OrganizationID string  `json:"organizationId"`
+	Name           string  `json:"name"`
+	Logo           *string `json:"logo,omitempty"`
+}
+
+// DeleteOrganizationRequest represents the request for deleting an organization
+type DeleteOrganizationRequest struct {
+	OrganizationID string `json:"organizationId"`
+}
+
+// Organization represents an organization
+type Organization struct {
+	OrganizationID string `json:"organizationId"`
+	Name           string `json:"name"`
+	Logo           string `json:"logo"`
+}
+
+// CreateOrganization creates a new organization
+func (c *Client) CreateOrganization(ctx context.Context, req CreateOrganizationRequest) (*CreateOrganizationResponse, error) {
+	data, err := c.doPostRequest(ctx, "/organization.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating organization: %w", err)
+	}
+	var resp CreateOrganizationResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create organization response: %w", err)
+	}
+	return &resp, nil
+}
+
+// GetOrganization fetches a single organization by ID
+func (c *Client) GetOrganization(ctx context.Context, organizationID string) (*Organization, error) {
+	endpoint := fmt.Sprintf("/organization.one?organizationId=%s", organizationID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching organization: %w", err)
+	}
+	var org Organization
+	if err := json.Unmarshal(data, &org); err != nil {
+		return nil, fmt.Errorf("parsing organization: %w", err)
+	}
+	return &org, nil
+}
+
+// UpdateOrganization updates an existing organization
+func (c *Client) UpdateOrganization(ctx context.Context, req UpdateOrganizationRequest) error {
+	_, err := c.doPostRequest(ctx, "/organization.update", req)
+	if err != nil {
+		return fmt.Errorf("updating organization: %w", err)
+	}
+	return nil
+}
+
+// DeleteOrganization deletes an organization
+func (c *Client) DeleteOrganization(ctx context.Context, organizationID string) error {
+	req := DeleteOrganizationRequest{OrganizationID: organizationID}
+	return c.doDeleteRequest(ctx, "/organization.delete", req)
+}

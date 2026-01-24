@@ -38,6 +38,8 @@ import (
 	mongors "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mongo"
 	mountrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mount"
 	mysqlrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mysql"
+	notificationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/notification"
+	organizationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/organization"
 	portrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/port"
 	postgresrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/postgres"
 	projectrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/project"
@@ -158,6 +160,8 @@ func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resou
 		redirectrs.NewResource,
 		backuprs.NewResource,
 		schedulers.NewResource,
+		notificationrs.NewResource,
+		organizationrs.NewResource,
 	}
 }
 
