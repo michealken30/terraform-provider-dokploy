@@ -447,3 +447,40 @@ func TestDoPostRequest_RetryOnServerError(t *testing.T) {
 		t.Errorf("expected id=123, got %s", result["id"])
 	}
 }
+
+// =============================================================================
+// Invalid JSON Response Tests
+// =============================================================================
+
+func TestDoRequest_InvalidJSON(t *testing.T) {
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{invalid json response`))
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	// doRequest returns raw bytes, so we need to test at a higher level
+	// Testing GetProjects which uses doRequest and unmarshals
+	_, err := client.GetProjects(context.Background())
+
+	if err == nil {
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestDoPostRequest_InvalidJSONResponse(t *testing.T) {
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`not json at all`))
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	// Testing CreateProject which uses doPostRequest and unmarshals
+	_, err := client.CreateProject(context.Background(), CreateProjectRequest{Name: "test"})
+
+	if err == nil {
+		t.Fatal("expected error for invalid JSON response, got nil")
+	}
+}

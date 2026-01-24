@@ -2318,17 +2318,17 @@ type DeleteNotificationRequest struct {
 
 // NotificationResponse represents a notification from the API
 type NotificationResponse struct {
-	NotificationID  string  `json:"notificationId"`
-	Name            string  `json:"name"`
+	NotificationID   string `json:"notificationId"`
+	Name             string `json:"name"`
 	NotificationType string `json:"notificationType"`
-	AppDeploy       bool    `json:"appDeploy"`
-	AppBuildError   bool    `json:"appBuildError"`
-	DatabaseBackup  bool    `json:"databaseBackup"`
-	VolumeBackup    bool    `json:"volumeBackup"`
-	DokployRestart  bool    `json:"dokployRestart"`
-	DockerCleanup   bool    `json:"dockerCleanup"`
-	ServerThreshold bool    `json:"serverThreshold"`
-	OrganizationID  string  `json:"organizationId"`
+	AppDeploy        bool   `json:"appDeploy"`
+	AppBuildError    bool   `json:"appBuildError"`
+	DatabaseBackup   bool   `json:"databaseBackup"`
+	VolumeBackup     bool   `json:"volumeBackup"`
+	DokployRestart   bool   `json:"dokployRestart"`
+	DockerCleanup    bool   `json:"dockerCleanup"`
+	ServerThreshold  bool   `json:"serverThreshold"`
+	OrganizationID   string `json:"organizationId"`
 	// Slack fields
 	WebhookURL *string `json:"webhookUrl,omitempty"`
 	Channel    *string `json:"channel,omitempty"`
@@ -2535,16 +2535,16 @@ func (c *Client) DeleteOrganization(ctx context.Context, organizationID string) 
 
 // CreateGitlabRequest is the request to create a GitLab provider
 type CreateGitlabRequest struct {
-	Name         string  `json:"name"`
-	GitlabURL    string  `json:"gitlabUrl"`
-	AuthID       string  `json:"authId"`
+	Name          string  `json:"name"`
+	GitlabURL     string  `json:"gitlabUrl"`
+	AuthID        string  `json:"authId"`
 	ApplicationID *string `json:"applicationId,omitempty"`
-	RedirectURI  *string `json:"redirectUri,omitempty"`
-	Secret       *string `json:"secret,omitempty"`
-	AccessToken  *string `json:"accessToken,omitempty"`
-	RefreshToken *string `json:"refreshToken,omitempty"`
-	GroupName    *string `json:"groupName,omitempty"`
-	ExpiresAt    *int64  `json:"expiresAt,omitempty"`
+	RedirectURI   *string `json:"redirectUri,omitempty"`
+	Secret        *string `json:"secret,omitempty"`
+	AccessToken   *string `json:"accessToken,omitempty"`
+	RefreshToken  *string `json:"refreshToken,omitempty"`
+	GroupName     *string `json:"groupName,omitempty"`
+	ExpiresAt     *int64  `json:"expiresAt,omitempty"`
 }
 
 // UpdateGitlabRequest is the request to update a GitLab provider

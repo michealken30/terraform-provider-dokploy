@@ -771,3 +771,131 @@ func TestCreateDestination_Error(t *testing.T) {
 		t.Fatal("expected error, got nil")
 	}
 }
+
+// =============================================================================
+// GetByName Not Found Tests
+// =============================================================================
+
+func TestGetRegistryByName_NotFound(t *testing.T) {
+	registries := []Registry{
+		{RegistryID: "reg-1", RegistryName: "Registry One", RegistryType: "docker"},
+		{RegistryID: "reg-2", RegistryName: "Registry Two", RegistryType: "ecr"},
+	}
+
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(registries)
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetRegistryByName(context.Background(), "Non-Existent Registry")
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestGetCertificateByName_NotFound(t *testing.T) {
+	certs := []Certificate{
+		{CertificateID: "cert-1", Name: "Cert One"},
+		{CertificateID: "cert-2", Name: "Cert Two"},
+	}
+
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(certs)
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetCertificateByName(context.Background(), "Non-Existent Cert")
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestGetDestinationByName_NotFound(t *testing.T) {
+	destinations := []Destination{
+		{DestinationID: "dest-1", Name: "Dest One"},
+		{DestinationID: "dest-2", Name: "Dest Two"},
+	}
+
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(destinations)
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetDestinationByName(context.Background(), "Non-Existent Dest")
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
+// =============================================================================
+// Invalid JSON Response Tests
+// =============================================================================
+
+func TestGetSSHKeys_InvalidJSON(t *testing.T) {
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{invalid json`))
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetSSHKeys(context.Background())
+
+	if err == nil {
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestGetRegistries_InvalidJSON(t *testing.T) {
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`not valid json at all`))
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetRegistries(context.Background())
+
+	if err == nil {
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestGetCertificates_InvalidJSON(t *testing.T) {
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"incomplete": `))
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetCertificates(context.Background())
+
+	if err == nil {
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestGetDestinations_InvalidJSON(t *testing.T) {
+	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`[{"id": 123]`)) // malformed array
+	})
+	defer server.Close()
+
+	client := newTestClient(server)
+	_, err := client.GetDestinations(context.Background())
+
+	if err == nil {
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}
