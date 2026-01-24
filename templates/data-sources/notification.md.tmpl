@@ -1,0 +1,26 @@
+---
+page_title: "dokploy_notification Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches a single notification configuration from Dokploy by ID or name.
+---
+
+# dokploy_notification (Data Source)
+
+Fetches a single notification configuration from Dokploy by ID or name.
+
+## Example Usage
+
+```hcl
+# Look up notification by ID
+data "dokploy_notification" "by_id" {
+  notification_id = "abc123"
+}
+
+# Look up notification by name
+data "dokploy_notification" "by_name" {
+  name = "deploy-alerts"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

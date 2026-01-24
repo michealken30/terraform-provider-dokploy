@@ -1,0 +1,26 @@
+---
+page_title: "dokploy_user Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches a single user from Dokploy by ID or email.
+---
+
+# dokploy_user (Data Source)
+
+Fetches a single user from Dokploy by ID or email. Use this to look up user details for permission management.
+
+## Example Usage
+
+```hcl
+# Look up user by ID
+data "dokploy_user" "by_id" {
+  user_id = "abc123"
+}
+
+# Look up user by email
+data "dokploy_user" "by_email" {
+  email = "user@example.com"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

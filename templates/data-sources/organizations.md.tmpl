@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_organizations Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all organizations from Dokploy.
+---
+
+# dokploy_organizations (Data Source)
+
+Fetches all organizations from Dokploy. Use this data source to discover organization IDs.
+
+## Example Usage
+
+```hcl
+data "dokploy_organizations" "all" {}
+
+# Output all organization IDs
+output "organization_ids" {
+  value = { for o in data.dokploy_organizations.all.organizations : o.name => o.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

@@ -1,0 +1,31 @@
+---
+page_title: "dokploy_deployments Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches deployment history from Dokploy.
+---
+
+# dokploy_deployments (Data Source)
+
+Fetches deployment history from Dokploy for an application or compose service.
+
+## Example Usage
+
+```hcl
+# Get deployments for an application
+data "dokploy_deployments" "app_deployments" {
+  application_id = dokploy_application.web.id
+}
+
+# Get deployments for a compose service
+data "dokploy_deployments" "compose_deployments" {
+  compose_id = dokploy_compose.stack.id
+}
+
+# Output latest deployment status
+output "latest_deployment_status" {
+  value = length(data.dokploy_deployments.app_deployments.deployments) > 0 ? data.dokploy_deployments.app_deployments.deployments[0].status : "no deployments"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

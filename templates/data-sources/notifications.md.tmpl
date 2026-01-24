@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_notifications Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all notification configurations from Dokploy.
+---
+
+# dokploy_notifications (Data Source)
+
+Fetches all notification configurations from Dokploy. Use this data source to discover notification IDs.
+
+## Example Usage
+
+```hcl
+data "dokploy_notifications" "all" {}
+
+# Output all notification IDs
+output "notification_ids" {
+  value = { for n in data.dokploy_notifications.all.notifications : n.name => n.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

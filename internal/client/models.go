@@ -368,21 +368,21 @@ type Destination struct {
 
 // Notification represents a notification configuration
 type Notification struct {
-	NotificationID  string          `json:"notificationId"`
-	Name            string          `json:"name"`
-	Type            string          `json:"type"`
-	AppDeploy       bool            `json:"appDeploy"`
-	AppBuildError   bool            `json:"appBuildError"`
-	DatabaseBackup  bool            `json:"databaseBackup"`
-	DokployRestart  bool            `json:"dokployRestart"`
-	DockerCleanup   bool            `json:"dockerCleanup"`
-	ServerThreshold bool            `json:"serverThreshold"`
-	CreatedAt       time.Time       `json:"createdAt"`
-	OrganizationID  string          `json:"organizationId"`
-	SlackConfig     *SlackConfig    `json:"slack,omitempty"`
-	DiscordConfig   *DiscordConfig  `json:"discord,omitempty"`
-	EmailConfig     *EmailConfig    `json:"email,omitempty"`
-	TelegramConfig  *TelegramConfig `json:"telegram,omitempty"`
+	NotificationID   string          `json:"notificationId"`
+	Name             string          `json:"name"`
+	NotificationType string          `json:"notificationType"`
+	AppDeploy        bool            `json:"appDeploy"`
+	AppBuildError    bool            `json:"appBuildError"`
+	DatabaseBackup   bool            `json:"databaseBackup"`
+	DokployRestart   bool            `json:"dokployRestart"`
+	DockerCleanup    bool            `json:"dockerCleanup"`
+	ServerThreshold  bool            `json:"serverThreshold"`
+	CreatedAt        time.Time       `json:"createdAt"`
+	OrganizationID   string          `json:"organizationId"`
+	SlackConfig      *SlackConfig    `json:"slack,omitempty"`
+	DiscordConfig    *DiscordConfig  `json:"discord,omitempty"`
+	EmailConfig      *EmailConfig    `json:"email,omitempty"`
+	TelegramConfig   *TelegramConfig `json:"telegram,omitempty"`
 }
 
 // SlackConfig represents Slack notification config
@@ -410,4 +410,34 @@ type EmailConfig struct {
 type TelegramConfig struct {
 	BotToken string `json:"botToken"`
 	ChatID   string `json:"chatId"`
+}
+
+// GitProvider represents a git provider configuration
+type GitProvider struct {
+	GitProviderID string  `json:"gitProviderId"`
+	Name          string  `json:"name"`
+	ProviderType  string  `json:"providerType"`
+	GitlabID      *string `json:"gitlabId,omitempty"`
+	BitbucketID   *string `json:"bitbucketId,omitempty"`
+	GiteaID       *string `json:"giteaId,omitempty"`
+	GithubID      *string `json:"githubId,omitempty"`
+}
+
+// Github represents a GitHub OAuth connection
+type Github struct {
+	GithubID      string  `json:"githubId"`
+	GitProviderID string  `json:"gitProviderId"`
+	GithubAppName *string `json:"githubAppName,omitempty"`
+	GithubAppID   *int64  `json:"githubAppId,omitempty"`
+}
+
+// Deployment represents a deployment record
+type Deployment struct {
+	DeploymentID  string  `json:"deploymentId"`
+	Title         *string `json:"title,omitempty"`
+	Status        string  `json:"status"`
+	Description   *string `json:"description,omitempty"`
+	ApplicationID *string `json:"applicationId,omitempty"`
+	ComposeID     *string `json:"composeId,omitempty"`
+	CreatedAt     *string `json:"createdAt,omitempty"`
 }

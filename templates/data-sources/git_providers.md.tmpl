@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_git_providers Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all git providers from Dokploy.
+---
+
+# dokploy_git_providers (Data Source)
+
+Fetches all git providers from Dokploy (GitLab, Bitbucket, Gitea, GitHub).
+
+## Example Usage
+
+```hcl
+data "dokploy_git_providers" "all" {}
+
+# Output all git provider IDs by type
+output "gitlab_providers" {
+  value = [for p in data.dokploy_git_providers.all.git_providers : p if p.provider_type == "gitlab"]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

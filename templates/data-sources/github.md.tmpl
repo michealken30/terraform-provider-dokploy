@@ -1,0 +1,25 @@
+---
+page_title: "dokploy_github Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches a GitHub OAuth connection from Dokploy.
+---
+
+# dokploy_github (Data Source)
+
+Fetches a GitHub OAuth connection from Dokploy. GitHub providers can only be created via OAuth flow, but can be read via this data source.
+
+## Example Usage
+
+```hcl
+# Look up GitHub provider by ID
+data "dokploy_github" "main" {
+  github_id = "abc123"
+}
+
+output "github_app_name" {
+  value = data.dokploy_github.main.github_app_name
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

@@ -15,8 +15,15 @@ import (
 	// Data sources
 	applicationds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/application"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/certificates"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/deployments"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/destinations"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/environments"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/github"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/gitproviders"
+	notificationds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/notification"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/notifications"
+	organizationds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/organization"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/organizations"
 	projectds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/project"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/projects"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/registries"
@@ -24,6 +31,8 @@ import (
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/servers"
 	sshkeyds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/sshkey"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/sshkeys"
+	userds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/user"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/users"
 
 	// Resources
 	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
@@ -188,5 +197,14 @@ func (p *DokployProvider) DataSources(ctx context.Context) []func() datasource.D
 		certificates.NewDataSource,
 		destinations.NewDataSource,
 		registries.NewDataSource,
+		users.NewDataSource,
+		userds.NewDataSource,
+		organizations.NewDataSource,
+		organizationds.NewDataSource,
+		notifications.NewDataSource,
+		notificationds.NewDataSource,
+		gitproviders.NewDataSource,
+		github.NewDataSource,
+		deployments.NewDataSource,
 	}
 }

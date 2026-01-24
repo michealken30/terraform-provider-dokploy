@@ -1,0 +1,26 @@
+---
+page_title: "dokploy_organization Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches a single organization from Dokploy by ID or name.
+---
+
+# dokploy_organization (Data Source)
+
+Fetches a single organization from Dokploy by ID or name.
+
+## Example Usage
+
+```hcl
+# Look up organization by ID
+data "dokploy_organization" "by_id" {
+  organization_id = "abc123"
+}
+
+# Look up organization by name
+data "dokploy_organization" "by_name" {
+  name = "my-org"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

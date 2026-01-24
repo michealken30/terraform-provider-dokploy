@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_users Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all users from Dokploy.
+---
+
+# dokploy_users (Data Source)
+
+Fetches all users from Dokploy. Use this data source to discover user IDs for permission management.
+
+## Example Usage
+
+```hcl
+data "dokploy_users" "all" {}
+
+# Output all user IDs
+output "user_ids" {
+  value = { for u in data.dokploy_users.all.users : u.email => u.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

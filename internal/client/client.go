@@ -3023,3 +3023,64 @@ func (c *Client) DeleteVolumeBackup(ctx context.Context, volumeBackupID string) 
 	}
 	return nil
 }
+
+// --- Data Source Methods ---
+
+// GetOrganizations fetches all organizations
+func (c *Client) GetOrganizations(ctx context.Context) ([]Organization, error) {
+	data, err := c.doRequest(ctx, "/organization.all")
+	if err != nil {
+		return nil, fmt.Errorf("fetching organizations: %w", err)
+	}
+	var orgs []Organization
+	if err := json.Unmarshal(data, &orgs); err != nil {
+		return nil, fmt.Errorf("parsing organizations: %w", err)
+	}
+	return orgs, nil
+}
+
+// GetGitProviders fetches all git providers
+func (c *Client) GetGitProviders(ctx context.Context) ([]GitProvider, error) {
+	data, err := c.doRequest(ctx, "/gitProvider.getAll")
+	if err != nil {
+		return nil, fmt.Errorf("fetching git providers: %w", err)
+	}
+	var providers []GitProvider
+	if err := json.Unmarshal(data, &providers); err != nil {
+		return nil, fmt.Errorf("parsing git providers: %w", err)
+	}
+	return providers, nil
+}
+
+// GetGithub fetches a GitHub OAuth connection by ID
+func (c *Client) GetGithub(ctx context.Context, githubID string) (*Github, error) {
+	endpoint := fmt.Sprintf("/github.one?githubId=%s", githubID)
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching github provider: %w", err)
+	}
+	var github Github
+	if err := json.Unmarshal(data, &github); err != nil {
+		return nil, fmt.Errorf("parsing github provider: %w", err)
+	}
+	return &github, nil
+}
+
+// GetDeployments fetches deployment history for an application or compose
+func (c *Client) GetDeployments(ctx context.Context, serviceID string, serviceType string) ([]Deployment, error) {
+	var endpoint string
+	if serviceType == "application" {
+		endpoint = fmt.Sprintf("/deployment.all?applicationId=%s", serviceID)
+	} else {
+		endpoint = fmt.Sprintf("/deployment.allByCompose?composeId=%s", serviceID)
+	}
+	data, err := c.doRequest(ctx, endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching deployments: %w", err)
+	}
+	var deployments []Deployment
+	if err := json.Unmarshal(data, &deployments); err != nil {
+		return nil, fmt.Errorf("parsing deployments: %w", err)
+	}
+	return deployments, nil
+}
