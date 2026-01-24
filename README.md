@@ -1,36 +1,42 @@
 # Terraform Provider for Dokploy
 
-A Terraform provider for managing Dokploy infrastructure.
+[![Tests](https://github.com/reserve-protocol/terraform-provider-dokploy/actions/workflows/test.yml/badge.svg)](https://github.com/reserve-protocol/terraform-provider-dokploy/actions/workflows/test.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/reserve-protocol/terraform-provider-dokploy)](https://goreportcard.com/report/github.com/reserve-protocol/terraform-provider-dokploy)
 
-## Status
+The Dokploy provider allows you to manage [Dokploy](https://dokploy.com) infrastructure as code. Dokploy is an open-source, self-hostable Platform as a Service (PaaS) that simplifies deploying applications, databases, and Docker Compose stacks.
 
-**Phase 1: Data Sources (Read-Only)** - Complete
+## Requirements
 
-The provider currently supports read-only data sources for querying Dokploy infrastructure:
-- `dokploy_projects` - List all projects
-- `dokploy_project` - Get a single project by ID or name
-- `dokploy_servers` - List all servers
-- `dokploy_server` - Get a single server by ID or name
-- `dokploy_ssh_keys` - List all SSH keys
-- `dokploy_ssh_key` - Get a single SSH key by ID or name
-- `dokploy_environments` - List environments in a project
-- `dokploy_application` - Get a single application by ID
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
+- [Go](https://golang.org/doc/install) >= 1.23 (to build the provider)
+- A running Dokploy instance with API access
 
-**Phase 2: HCL Generator** - Complete
+## Installation
 
-A tool to generate Terraform configuration from Dokploy backup JSON files.
+### From Terraform Registry (Recommended)
 
-**Phase 3: Resources (Future)**
-
-Create/update/delete operations will be added after validation on a staging environment.
-
-## Building
-
-```bash
-go build -o terraform-provider-dokploy
+```hcl
+terraform {
+  required_providers {
+    dokploy = {
+      source  = "reserve-protocol/dokploy"
+      version = "~> 0.1"
+    }
+  }
+}
 ```
 
-## Provider Configuration
+### From Source
+
+```bash
+git clone https://github.com/reserve-protocol/terraform-provider-dokploy.git
+cd terraform-provider-dokploy
+make install
+```
+
+## Authentication
+
+The provider requires a Dokploy host URL and API key:
 
 ```hcl
 provider "dokploy" {
@@ -39,102 +45,137 @@ provider "dokploy" {
 }
 ```
 
-Configuration can also be set via environment variables:
-- `DOKPLOY_HOST` - Dokploy server URL
-- `DOKPLOY_API_KEY` - API key
-
-## Example Usage
-
-```hcl
-# List all projects
-data "dokploy_projects" "all" {}
-
-# Get a specific project by name
-data "dokploy_project" "example" {
-  name = "my-project"
-}
-
-# Get environments for a project
-data "dokploy_environments" "example" {
-  project_id = data.dokploy_project.example.id
-}
-
-# Output project environment names
-output "project_environments" {
-  value = [for e in data.dokploy_project.example.environments : e.name]
-}
-```
-
-See `examples/data-sources/main.tf` for more examples.
-
-## HCL Generator
-
-Generate Terraform configuration from backup JSON files:
+Or via environment variables:
 
 ```bash
-cd tools/hcl-generator
-go build -o hcl-generator
-
-./hcl-generator --backup-dir /path/to/backup --output ./generated
+export DOKPLOY_HOST="https://dokploy.example.com"
+export DOKPLOY_API_KEY="your-api-key"
 ```
 
-The generator creates:
-- `provider.tf` - Provider configuration
-- `ssh_keys.tf` - SSH key resources
-- `servers.tf` - Server resources
-- `projects.tf` - Projects and environments
-- `applications.tf` - Application resources
-- `compose.tf` - Docker Compose services
-- `databases.tf` - Database resources (Postgres, MySQL, etc.)
-- `registries.tf` - Container registries
-- `imports.tf` - Import blocks for existing resources
+## Quick Start
 
-**Security Notes:**
-- Private SSH keys are NOT included in generated HCL
-- Database passwords are NOT included
-- Registry passwords are NOT included
+```hcl
+# Create a project
+resource "dokploy_project" "myapp" {
+  name        = "my-application"
+  description = "Production application"
+}
 
-## Local Development
+# Create an environment
+resource "dokploy_environment" "prod" {
+  project_id  = dokploy_project.myapp.id
+  name        = "production"
+  description = "Production environment"
+}
 
-1. Build the provider:
-   ```bash
-   go build -o terraform-provider-dokploy
-   ```
+# Deploy an application
+resource "dokploy_application" "web" {
+  environment_id = dokploy_environment.prod.id
+  name           = "web"
+  description    = "Web frontend"
+}
 
-2. Create a `.terraformrc` file in your home directory:
-   ```hcl
-   provider_installation {
-     dev_overrides {
-       "registry.terraform.io/reserve-protocol/dokploy" = "/path/to/terraform-provider-dokploy"
-     }
-     direct {}
-   }
-   ```
-
-3. Use the provider in your Terraform configuration.
-
-## Architecture
-
+# Add a PostgreSQL database
+resource "dokploy_postgres" "db" {
+  environment_id    = dokploy_environment.prod.id
+  name              = "postgres"
+  database_name     = "myapp_prod"
+  database_user     = "myapp"
+  database_password = var.db_password
+  docker_image      = "postgres:16-alpine"
+}
 ```
-terraform-provider-dokploy/
-├── main.go                        # Provider entry point
-├── internal/
-│   ├── provider/
-│   │   └── provider.go            # Provider configuration
-│   ├── client/
-│   │   ├── client.go              # API client
-│   │   └── models.go              # Data models
-│   └── datasource/
-│       ├── projects/              # dokploy_projects data source
-│       ├── project/               # dokploy_project data source
-│       ├── servers/               # dokploy_servers data source
-│       ├── server/                # dokploy_server data source
-│       ├── sshkeys/               # dokploy_ssh_keys data source
-│       ├── sshkey/                # dokploy_ssh_key data source
-│       ├── environments/          # dokploy_environments data source
-│       └── application/           # dokploy_application data source
-├── tools/
-│   └── hcl-generator/             # HCL generation tool
-└── examples/
-    └── data-sources/              # Example configurations
+
+## Resources
+
+| Resource | Description |
+|----------|-------------|
+| `dokploy_bootstrap` | Bootstrap a new Dokploy instance |
+| `dokploy_project` | Manage projects |
+| `dokploy_environment` | Manage environments within projects |
+| `dokploy_application` | Deploy applications |
+| `dokploy_compose` | Deploy Docker Compose stacks |
+| `dokploy_postgres` | PostgreSQL databases |
+| `dokploy_mysql` | MySQL databases |
+| `dokploy_mariadb` | MariaDB databases |
+| `dokploy_mongo` | MongoDB databases |
+| `dokploy_redis` | Redis instances |
+| `dokploy_server` | Remote server configuration |
+| `dokploy_sshkey` | SSH key management |
+| `dokploy_registry` | Container registry credentials |
+| `dokploy_certificate` | SSL/TLS certificates |
+| `dokploy_destination` | Backup destinations (S3-compatible) |
+
+## Data Sources
+
+| Data Source | Description |
+|-------------|-------------|
+| `dokploy_projects` | List all projects |
+| `dokploy_project` | Get a project by ID or name |
+| `dokploy_servers` | List all servers |
+| `dokploy_server` | Get a server by ID or name |
+| `dokploy_sshkeys` | List all SSH keys |
+| `dokploy_sshkey` | Get an SSH key by ID or name |
+| `dokploy_environments` | List environments in a project |
+| `dokploy_application` | Get an application by ID |
+
+## Examples
+
+See the [examples](./examples) directory for complete configurations:
+
+- [Bootstrap](./examples/resources/bootstrap) - Initial Dokploy setup
+- [Project & Environment](./examples/resources/project) - Basic project structure
+- [Applications](./examples/resources/application) - Application deployment
+- [Databases](./examples/resources/postgres) - Database provisioning
+- [Docker Compose](./examples/resources/compose) - Multi-container deployments
+- [Full Stack](./examples/scenarios/full-stack) - Complete production setup
+
+## Development
+
+### Building
+
+```bash
+make build
 ```
+
+### Testing
+
+```bash
+# Unit tests
+make test
+
+# Acceptance tests (requires running Dokploy instance)
+export DOKPLOY_HOST="http://localhost:3000"
+export DOKPLOY_API_KEY="your-api-key"
+make testacc
+```
+
+### Linting
+
+```bash
+make lint
+```
+
+### Local Installation
+
+```bash
+make install
+```
+
+This installs the provider to `~/.terraform.d/plugins/` for local development.
+
+### Documentation
+
+Generate provider documentation:
+
+```bash
+make docs
+```
+
+## Contributing
+
+Contributions are welcome! Please see our [testing guide](TESTING.md) for information on running tests.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
