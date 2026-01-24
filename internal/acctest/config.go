@@ -93,6 +93,7 @@ resource "dokploy_environment" "test" {
 resource "dokploy_postgres" "test" {
   name              = %q
   environment_id    = dokploy_environment.test.id
+  database_name     = "testdb"
   database_user     = %q
   database_password = %q
 }
