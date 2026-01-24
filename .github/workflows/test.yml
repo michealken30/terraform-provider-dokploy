@@ -93,22 +93,38 @@ jobs:
       - name: Bootstrap Dokploy and get API key
         id: bootstrap
         run: |
-          # Bootstrap Dokploy (create initial admin user)
-          BOOTSTRAP_RESP=$(curl -sf -X POST http://localhost:3000/api/auth.createAdmin \
+          # Register admin user and capture session cookie
+          COOKIE_JAR=$(mktemp)
+          curl -sf -c "$COOKIE_JAR" -X POST http://localhost:3000/api/auth/sign-up/email \
             -H "Content-Type: application/json" \
-            -d '{"email":"admin@test.local","password":"TestPassword123!"}')
+            -d '{"email":"admin@test.local","password":"TestPassword123!","name":"Admin","lastName":"User"}'
 
-          # Login and get token
-          TOKEN=$(curl -sf -X POST http://localhost:3000/api/auth.login \
-            -H "Content-Type: application/json" \
-            -d '{"email":"admin@test.local","password":"TestPassword123!"}' | jq -r '.token')
+          # Get session token from cookie jar
+          SESSION_TOKEN=$(grep 'better-auth.session_token' "$COOKIE_JAR" | awk '{print $NF}')
+          if [ -z "$SESSION_TOKEN" ]; then
+            echo "Failed to get session token"
+            exit 1
+          fi
+
+          # Get organization ID
+          USER_INFO=$(curl -sf http://localhost:3000/api/user.get \
+            -H "Cookie: better-auth.session_token=$SESSION_TOKEN")
+          ORG_ID=$(echo "$USER_INFO" | jq -r '.organizationId')
 
           # Create API key
-          API_KEY=$(curl -sf -X POST http://localhost:3000/api/user.generateToken \
-            -H "x-api-key: $TOKEN" \
-            -H "Content-Type: application/json" | jq -r '.token // .apiKey // .')
+          API_KEY=$(curl -sf -X POST http://localhost:3000/api/user.createApiKey \
+            -H "Content-Type: application/json" \
+            -H "Cookie: better-auth.session_token=$SESSION_TOKEN" \
+            -d "{\"name\":\"terraform-test\",\"rateLimitEnabled\":false,\"metadata\":{\"organizationId\":\"$ORG_ID\"}}" \
+            | jq -r '.key')
+
+          if [ -z "$API_KEY" ] || [ "$API_KEY" = "null" ]; then
+            echo "Failed to get API key"
+            exit 1
+          fi
 
           echo "api_key=$API_KEY" >> $GITHUB_OUTPUT
+          rm -f "$COOKIE_JAR"
 
       - name: Run acceptance tests
         run: go test -v -timeout 60m ./internal/...
