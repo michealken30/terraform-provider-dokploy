@@ -73,6 +73,13 @@ jobs:
           terraform_version: '1.9.*'
           terraform_wrapper: false
 
+      - name: Pull Docker images
+        run: |
+          docker pull postgres:16-alpine &
+          docker pull redis:7-alpine &
+          docker pull dokploy/dokploy:latest &
+          wait
+
       - name: Start Dokploy
         run: docker compose up -d
         working-directory: .

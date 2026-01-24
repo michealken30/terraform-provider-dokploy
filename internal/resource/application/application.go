@@ -179,11 +179,17 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	// Update state
 	state.Name = types.StringValue(app.Name)
 	state.AppName = types.StringValue(app.AppName)
-	state.Description = types.StringValue(app.Description)
+	// Preserve null if description is empty and was originally null
+	if app.Description == "" && state.Description.IsNull() {
+		// Keep it null
+	} else {
+		state.Description = types.StringValue(app.Description)
+	}
 	state.EnvironmentID = types.StringValue(app.EnvironmentID)
+	// Preserve null if server_id is nil and was originally null
 	if app.ServerID != nil {
 		state.ServerID = types.StringValue(*app.ServerID)
-	} else {
+	} else if !state.ServerID.IsNull() {
 		state.ServerID = types.StringNull()
 	}
 

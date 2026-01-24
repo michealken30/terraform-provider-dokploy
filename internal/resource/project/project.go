@@ -139,7 +139,12 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	// Update state
 	state.Name = types.StringValue(project.Name)
-	state.Description = types.StringValue(project.Description)
+	// Preserve null if description is empty and was originally null
+	if project.Description == "" && state.Description.IsNull() {
+		// Keep it null
+	} else {
+		state.Description = types.StringValue(project.Description)
+	}
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

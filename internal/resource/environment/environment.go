@@ -148,7 +148,12 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	// Update state
 	state.Name = types.StringValue(env.Name)
-	state.Description = types.StringValue(env.Description)
+	// Preserve null if description is empty and was originally null
+	if env.Description == "" && state.Description.IsNull() {
+		// Keep it null
+	} else {
+		state.Description = types.StringValue(env.Description)
+	}
 	state.ProjectID = types.StringValue(env.ProjectID)
 
 	diags = resp.State.Set(ctx, &state)
