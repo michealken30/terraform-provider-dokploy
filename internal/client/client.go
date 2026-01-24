@@ -6,15 +6,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"time"
 )
 
+// RetryConfig configures retry behavior for API requests.
+type RetryConfig struct {
+	MaxRetries     int
+	InitialBackoff time.Duration
+	MaxBackoff     time.Duration
+}
+
+// DefaultRetryConfig returns the default retry configuration.
+func DefaultRetryConfig() RetryConfig {
+	return RetryConfig{
+		MaxRetries:     3,
+		InitialBackoff: 500 * time.Millisecond,
+		MaxBackoff:     30 * time.Second,
+	}
+}
+
 // Client is the Dokploy API client
 type Client struct {
-	baseURL    string
-	apiKey     string
-	httpClient *http.Client
+	baseURL     string
+	apiKey      string
+	httpClient  *http.Client
+	retryConfig RetryConfig
 }
 
 // New creates a new Dokploy API client
@@ -25,40 +43,85 @@ func New(baseURL, apiKey string) *Client {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		retryConfig: DefaultRetryConfig(),
 	}
 }
 
-// doRequest performs an authenticated GET request
+// NewWithRetry creates a new Dokploy API client with custom retry configuration.
+func NewWithRetry(baseURL, apiKey string, retryConfig RetryConfig) *Client {
+	return &Client{
+		baseURL:     baseURL,
+		apiKey:      apiKey,
+		httpClient:  &http.Client{Timeout: 30 * time.Second},
+		retryConfig: retryConfig,
+	}
+}
+
+// calculateBackoff returns the backoff duration for the given attempt.
+func (c *Client) calculateBackoff(attempt int) time.Duration {
+	backoff := float64(c.retryConfig.InitialBackoff) * math.Pow(2, float64(attempt))
+	if backoff > float64(c.retryConfig.MaxBackoff) {
+		backoff = float64(c.retryConfig.MaxBackoff)
+	}
+	return time.Duration(backoff)
+}
+
+// shouldRetry returns true if the request should be retried based on the status code.
+func shouldRetry(statusCode int) bool {
+	return statusCode == http.StatusTooManyRequests ||
+		(statusCode >= 500 && statusCode < 600)
+}
+
+// doRequest performs an authenticated GET request with retry support.
 func (c *Client) doRequest(ctx context.Context, endpoint string) ([]byte, error) {
 	url := fmt.Sprintf("%s/api%s", c.baseURL, endpoint)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
+	var lastErr error
+	for attempt := 0; attempt <= c.retryConfig.MaxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := c.calculateBackoff(attempt - 1)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("creating request: %w", err)
+		}
+
+		req.Header.Set("x-api-key", c.apiKey)
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("executing request: %w", err)
+			continue
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			lastErr = fmt.Errorf("reading response body: %w", err)
+			continue
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			return body, nil
+		}
+
+		lastErr = newAPIError(resp.StatusCode, endpoint, body)
+		if !shouldRetry(resp.StatusCode) {
+			return nil, lastErr
+		}
 	}
 
-	req.Header.Set("x-api-key", c.apiKey)
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("executing request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return body, nil
+	return nil, lastErr
 }
 
-// doPostRequest performs an authenticated POST request with JSON body
+// doPostRequest performs an authenticated POST request with JSON body and retry support.
 func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interface{}) ([]byte, error) {
 	url := fmt.Sprintf("%s/api%s", c.baseURL, endpoint)
 
@@ -67,34 +130,53 @@ func (c *Client) doPostRequest(ctx context.Context, endpoint string, body interf
 		return nil, fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
+	var lastErr error
+	for attempt := 0; attempt <= c.retryConfig.MaxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := c.calculateBackoff(attempt - 1)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
+		if err != nil {
+			return nil, fmt.Errorf("creating request: %w", err)
+		}
+
+		req.Header.Set("x-api-key", c.apiKey)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("executing request: %w", err)
+			continue
+		}
+
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			lastErr = fmt.Errorf("reading response body: %w", err)
+			continue
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			return respBody, nil
+		}
+
+		lastErr = newAPIError(resp.StatusCode, endpoint, respBody)
+		if !shouldRetry(resp.StatusCode) {
+			return nil, lastErr
+		}
 	}
 
-	req.Header.Set("x-api-key", c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("executing request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	return respBody, nil
+	return nil, lastErr
 }
 
-// doDeleteRequest performs a delete request, treating 404 as success (resource already gone)
+// doDeleteRequest performs a delete request with retry support, treating 404 as success.
 func (c *Client) doDeleteRequest(ctx context.Context, endpoint string, body interface{}) error {
 	url := fmt.Sprintf("%s/api%s", c.baseURL, endpoint)
 
@@ -103,32 +185,51 @@ func (c *Client) doDeleteRequest(ctx context.Context, endpoint string, body inte
 		return fmt.Errorf("marshaling request body: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return fmt.Errorf("creating request: %w", err)
+	var lastErr error
+	for attempt := 0; attempt <= c.retryConfig.MaxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := c.calculateBackoff(attempt - 1)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
+		if err != nil {
+			return fmt.Errorf("creating request: %w", err)
+		}
+
+		req.Header.Set("x-api-key", c.apiKey)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("executing request: %w", err)
+			continue
+		}
+
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			lastErr = fmt.Errorf("reading response body: %w", err)
+			continue
+		}
+
+		// Treat 200 OK and 404 Not Found as success (resource deleted or already gone)
+		if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNotFound {
+			return nil
+		}
+
+		lastErr = newAPIError(resp.StatusCode, endpoint, respBody)
+		if !shouldRetry(resp.StatusCode) {
+			return lastErr
+		}
 	}
 
-	req.Header.Set("x-api-key", c.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("executing request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("reading response body: %w", err)
-	}
-
-	// Treat 200 OK and 404 Not Found as success (resource deleted or already gone)
-	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNotFound {
-		return nil
-	}
-
-	return fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(respBody))
+	return lastErr
 }
 
 // GetProjects fetches all projects with nested environments and services
@@ -159,7 +260,7 @@ func (c *Client) GetProject(ctx context.Context, projectID string) (*Project, er
 		}
 	}
 
-	return nil, fmt.Errorf("project not found: %s", projectID)
+	return nil, newNotFoundError("project", projectID)
 }
 
 // GetProjectByName fetches a single project by name
@@ -175,7 +276,7 @@ func (c *Client) GetProjectByName(ctx context.Context, name string) (*Project, e
 		}
 	}
 
-	return nil, fmt.Errorf("project not found: %s", name)
+	return nil, newNotFoundError("project", name)
 }
 
 // GetServers fetches all server configurations
@@ -206,7 +307,7 @@ func (c *Client) GetServer(ctx context.Context, serverID string) (*Server, error
 		}
 	}
 
-	return nil, fmt.Errorf("server not found: %s", serverID)
+	return nil, newNotFoundError("server", serverID)
 }
 
 // GetServerByName fetches a single server by name
@@ -222,7 +323,7 @@ func (c *Client) GetServerByName(ctx context.Context, name string) (*Server, err
 		}
 	}
 
-	return nil, fmt.Errorf("server not found: %s", name)
+	return nil, newNotFoundError("server", name)
 }
 
 // GetSSHKeys fetches all SSH keys
@@ -253,7 +354,7 @@ func (c *Client) GetSSHKey(ctx context.Context, sshKeyID string) (*SSHKey, error
 		}
 	}
 
-	return nil, fmt.Errorf("SSH key not found: %s", sshKeyID)
+	return nil, newNotFoundError("SSH key", sshKeyID)
 }
 
 // GetSSHKeyByName fetches a single SSH key by name
@@ -269,7 +370,7 @@ func (c *Client) GetSSHKeyByName(ctx context.Context, name string) (*SSHKey, err
 		}
 	}
 
-	return nil, fmt.Errorf("SSH key not found: %s", name)
+	return nil, newNotFoundError("SSH key", name)
 }
 
 // GetRegistries fetches all container registries
@@ -298,7 +399,7 @@ func (c *Client) GetRegistry(ctx context.Context, registryID string) (*Registry,
 			return &registries[i], nil
 		}
 	}
-	return nil, fmt.Errorf("registry not found: %s", registryID)
+	return nil, newNotFoundError("registry", registryID)
 }
 
 // GetRegistryByName fetches a single registry by name
@@ -312,7 +413,7 @@ func (c *Client) GetRegistryByName(ctx context.Context, name string) (*Registry,
 			return &registries[i], nil
 		}
 	}
-	return nil, fmt.Errorf("registry not found: %s", name)
+	return nil, newNotFoundError("registry", name)
 }
 
 // CreateRegistryRequest represents the request body for creating a registry
@@ -400,7 +501,7 @@ func (c *Client) GetCertificate(ctx context.Context, certificateID string) (*Cer
 			return &certificates[i], nil
 		}
 	}
-	return nil, fmt.Errorf("certificate not found: %s", certificateID)
+	return nil, newNotFoundError("certificate", certificateID)
 }
 
 // GetCertificateByName fetches a single certificate by name
@@ -414,7 +515,7 @@ func (c *Client) GetCertificateByName(ctx context.Context, name string) (*Certif
 			return &certificates[i], nil
 		}
 	}
-	return nil, fmt.Errorf("certificate not found: %s", name)
+	return nil, newNotFoundError("certificate", name)
 }
 
 // CreateCertificateRequest represents the request body for creating a certificate
@@ -499,7 +600,7 @@ func (c *Client) GetDestination(ctx context.Context, destinationID string) (*Des
 			return &destinations[i], nil
 		}
 	}
-	return nil, fmt.Errorf("destination not found: %s", destinationID)
+	return nil, newNotFoundError("destination", destinationID)
 }
 
 // GetDestinationByName fetches a single destination by name
@@ -513,7 +614,7 @@ func (c *Client) GetDestinationByName(ctx context.Context, name string) (*Destin
 			return &destinations[i], nil
 		}
 	}
-	return nil, fmt.Errorf("destination not found: %s", name)
+	return nil, newNotFoundError("destination", name)
 }
 
 // CreateDestinationRequest represents the request body for creating a destination
@@ -608,7 +709,7 @@ func (c *Client) GetApplication(ctx context.Context, applicationID string) (*App
 		}
 	}
 
-	return nil, fmt.Errorf("application not found: %s", applicationID)
+	return nil, newNotFoundError("application", applicationID)
 }
 
 // GetEnvironment finds an environment by ID across all projects
@@ -626,7 +727,7 @@ func (c *Client) GetEnvironment(ctx context.Context, environmentID string) (*Env
 		}
 	}
 
-	return nil, fmt.Errorf("environment not found: %s", environmentID)
+	return nil, newNotFoundError("environment", environmentID)
 }
 
 // GetEnvironmentsByProjectID fetches all environments for a project
@@ -1006,7 +1107,7 @@ func (c *Client) GetCompose(ctx context.Context, composeID string) (*Compose, er
 		}
 	}
 
-	return nil, fmt.Errorf("compose not found: %s", composeID)
+	return nil, newNotFoundError("compose", composeID)
 }
 
 // UpdateCompose updates an existing compose service
@@ -1094,7 +1195,7 @@ func (c *Client) GetPostgres(ctx context.Context, postgresID string) (*Postgres,
 		}
 	}
 
-	return nil, fmt.Errorf("postgres not found: %s", postgresID)
+	return nil, newNotFoundError("postgres", postgresID)
 }
 
 // UpdatePostgres updates an existing postgres service
@@ -1184,7 +1285,7 @@ func (c *Client) GetMysql(ctx context.Context, mysqlID string) (*MySQL, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("mysql not found: %s", mysqlID)
+	return nil, newNotFoundError("mysql", mysqlID)
 }
 
 // UpdateMysql updates an existing mysql service
@@ -1274,7 +1375,7 @@ func (c *Client) GetMariadb(ctx context.Context, mariadbID string) (*MariaDB, er
 		}
 	}
 
-	return nil, fmt.Errorf("mariadb not found: %s", mariadbID)
+	return nil, newNotFoundError("mariadb", mariadbID)
 }
 
 // UpdateMariadb updates an existing mariadb service
@@ -1360,7 +1461,7 @@ func (c *Client) GetMongo(ctx context.Context, mongoID string) (*Mongo, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("mongo not found: %s", mongoID)
+	return nil, newNotFoundError("mongo", mongoID)
 }
 
 // UpdateMongo updates an existing mongo service
@@ -1444,7 +1545,7 @@ func (c *Client) GetRedis(ctx context.Context, redisID string) (*Redis, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("redis not found: %s", redisID)
+	return nil, newNotFoundError("redis", redisID)
 }
 
 // UpdateRedis updates an existing redis service

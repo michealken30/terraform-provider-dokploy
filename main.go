@@ -1,3 +1,7 @@
+// Terraform Provider Dokploy
+//
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+
 package main
 
 import (

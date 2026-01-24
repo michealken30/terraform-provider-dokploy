@@ -1,0 +1,121 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - run: go mod download
+      - run: go build -v ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - run: go mod download
+      - run: go test -v -coverprofile=coverage.out ./internal/client/...
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          fail_ci_if_error: false
+
+  acceptance-tests:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      TF_ACC: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.*'
+          terraform_wrapper: false
+
+      - name: Start Dokploy
+        run: docker compose up -d
+        working-directory: .
+
+      - name: Wait for Dokploy to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Dokploy is ready"
+              exit 0
+            fi
+            echo "Waiting for Dokploy... ($i/30)"
+            sleep 5
+          done
+          echo "Dokploy failed to start"
+          exit 1
+
+      - name: Bootstrap Dokploy and get API key
+        id: bootstrap
+        run: |
+          # Bootstrap Dokploy (create initial admin user)
+          BOOTSTRAP_RESP=$(curl -sf -X POST http://localhost:3000/api/auth.createAdmin \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@test.local","password":"TestPassword123!"}')
+
+          # Login and get token
+          TOKEN=$(curl -sf -X POST http://localhost:3000/api/auth.login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@test.local","password":"TestPassword123!"}' | jq -r '.token')
+
+          # Create API key
+          API_KEY=$(curl -sf -X POST http://localhost:3000/api/user.generateToken \
+            -H "x-api-key: $TOKEN" \
+            -H "Content-Type: application/json" | jq -r '.token // .apiKey // .')
+
+          echo "api_key=$API_KEY" >> $GITHUB_OUTPUT
+
+      - name: Run acceptance tests
+        run: go test -v -timeout 60m ./internal/...
+        env:
+          DOKPLOY_HOST: http://localhost:3000
+          DOKPLOY_API_KEY: ${{ steps.bootstrap.outputs.api_key }}
+
+      - name: Stop Dokploy
+        if: always()
+        run: docker compose down -v
