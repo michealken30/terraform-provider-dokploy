@@ -191,6 +191,13 @@ func newSafetyTestServer(t *testing.T) *safetyTestServer {
 		case strings.HasSuffix(r.URL.Path, "/volumeBackups.one"):
 			json.NewEncoder(w).Encode(mockVolumeBackup())
 
+		case strings.HasSuffix(r.URL.Path, "/github.one"):
+			json.NewEncoder(w).Encode(mockGithub())
+
+		case strings.HasSuffix(r.URL.Path, "/deployment.all"),
+			strings.HasSuffix(r.URL.Path, "/deployment.allByCompose"):
+			json.NewEncoder(w).Encode(mockDeployments())
+
 		default:
 			// Unknown endpoint - return empty JSON object
 			w.Write([]byte("{}"))
@@ -238,10 +245,6 @@ func (sts *safetyTestServer) GetRequests() []requestRecord {
 
 func ptrStr(s string) *string {
 	return &s
-}
-
-func ptrBool(b bool) *bool {
-	return &b
 }
 
 // =============================================================================
@@ -310,28 +313,28 @@ func mockPostgres() Postgres {
 
 func mockMySQL() MySQL {
 	return MySQL{
-		MySQLID:          "mysql-test-123",
-		Name:             "test-mysql",
-		AppName:          "test-mysql-app",
-		Description:      "Test mysql",
-		EnvironmentID:    "env-test-123",
-		DatabaseName:     "testdb",
-		DatabaseUser:     "testuser",
-		DatabasePassword: "testpass",
+		MySQLID:              "mysql-test-123",
+		Name:                 "test-mysql",
+		AppName:              "test-mysql-app",
+		Description:          "Test mysql",
+		EnvironmentID:        "env-test-123",
+		DatabaseName:         "testdb",
+		DatabaseUser:         "testuser",
+		DatabasePassword:     "testpass",
 		DatabaseRootPassword: "testrootpass",
 	}
 }
 
 func mockMariaDB() MariaDB {
 	return MariaDB{
-		MariaDBID:        "mariadb-test-123",
-		Name:             "test-mariadb",
-		AppName:          "test-mariadb-app",
-		Description:      "Test mariadb",
-		EnvironmentID:    "env-test-123",
-		DatabaseName:     "testdb",
-		DatabaseUser:     "testuser",
-		DatabasePassword: "testpass",
+		MariaDBID:            "mariadb-test-123",
+		Name:                 "test-mariadb",
+		AppName:              "test-mariadb-app",
+		Description:          "Test mariadb",
+		EnvironmentID:        "env-test-123",
+		DatabaseName:         "testdb",
+		DatabaseUser:         "testuser",
+		DatabasePassword:     "testpass",
 		DatabaseRootPassword: "testrootpass",
 	}
 }
@@ -534,6 +537,30 @@ func mockVolumeBackup() VolumeBackup {
 		Prefix:         "backup-",
 		CronExpression: "0 0 * * *",
 		DestinationID:  "dest-test-123",
+	}
+}
+
+func mockGithub() Github {
+	return Github{
+		GithubID:      "github-test-123",
+		GitProviderID: "gitprov-test-123",
+	}
+}
+
+func mockDeployments() []Deployment {
+	title := "Test deployment"
+	desc := "Test deployment description"
+	appID := "app-test-123"
+	createdAt := "2024-01-01T00:00:00Z"
+	return []Deployment{
+		{
+			DeploymentID:  "deploy-test-123",
+			Title:         &title,
+			Status:        "done",
+			Description:   &desc,
+			ApplicationID: &appID,
+			CreatedAt:     &createdAt,
+		},
 	}
 }
 
