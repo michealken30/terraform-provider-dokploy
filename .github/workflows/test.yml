@@ -51,7 +51,7 @@ jobs:
       - name: Run tests with coverage
         run: go test -v -coverprofile=coverage.out ./internal/client/... ./internal/provider/...
       - name: Coverage analysis
-        run: go run ./tools/coverage -coverprofile=coverage.out -threshold=85 ./internal
+        run: go run ./tools/coverage -coverprofile=coverage.out -threshold=99 ./internal
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
