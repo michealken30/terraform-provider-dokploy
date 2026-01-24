@@ -23,6 +23,7 @@ import (
 
 	// Resources
 	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
+	bootstraprs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/bootstrap"
 	certificaters "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/certificate"
 	composers "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/compose"
 	destinationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/destination"
@@ -74,9 +75,10 @@ func (p *DokployProvider) Schema(ctx context.Context, req provider.SchemaRequest
 				Optional:    true,
 			},
 			"api_key": schema.StringAttribute{
-				Description: "The Dokploy API key. Can also be set via DOKPLOY_API_KEY environment variable.",
-				Optional:    true,
-				Sensitive:   true,
+				Description: "The Dokploy API key. Can also be set via DOKPLOY_API_KEY environment variable. " +
+					"Optional for bootstrap resource, required for all other resources.",
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -110,16 +112,10 @@ func (p *DokployProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	if apiKey == "" {
-		resp.Diagnostics.AddError(
-			"Missing API Key Configuration",
-			"The provider requires an API key to be configured. "+
-				"Set the api_key value in the provider configuration or use the DOKPLOY_API_KEY environment variable.",
-		)
-		return
-	}
+	// API key is optional - bootstrap resource can work without it
+	// Other resources will fail if they need the client and api_key is not set
 
-	// Create API client
+	// Create API client (may have empty apiKey for bootstrap-only usage)
 	apiClient := client.New(host, apiKey)
 
 	// Make the client available to data sources and resources
@@ -129,6 +125,7 @@ func (p *DokployProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		bootstraprs.NewResource,
 		projectrs.NewResource,
 		serverrs.NewResource,
 		environmentrs.NewResource,
