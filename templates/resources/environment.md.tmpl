@@ -1,0 +1,47 @@
+---
+page_title: "dokploy_environment Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy environment within a project.
+---
+
+# dokploy_environment (Resource)
+
+Manages a Dokploy environment within a project. Environments contain applications, databases, and compose services.
+
+## Example Usage
+
+{{ tffile "examples/resources/environment/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Environments can be imported using their ID:
+
+```shell
+terraform import dokploy_environment.example def456-environment-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_environment.example
+  id = "def456-environment-id"
+}
+```
+
+### Finding Environment IDs
+
+Use the `dokploy_environments` data source to discover environment IDs:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "environment_ids" {
+  value = { for e in data.dokploy_environments.all.environments : e.name => e.id }
+}
+```

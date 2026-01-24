@@ -1,0 +1,134 @@
+---
+page_title: "Provider: Dokploy"
+description: |-
+  The Dokploy provider enables Terraform to manage Dokploy infrastructure.
+---
+
+# Dokploy Provider
+
+The Dokploy provider enables you to manage your [Dokploy](https://dokploy.com/) infrastructure as code using Terraform.
+
+## Example Usage
+
+{{ tffile "examples/resources/project/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Importing Existing Resources
+
+All Dokploy resources support importing via `terraform import`. This allows you to bring existing Dokploy infrastructure under Terraform management.
+
+### Import Workflow
+
+#### Step 1: Discover Resource IDs
+
+Use the data sources to discover existing resource IDs:
+
+```hcl
+# Discover all projects and their IDs
+data "dokploy_projects" "all" {}
+
+output "project_ids" {
+  value = { for p in data.dokploy_projects.all.projects : p.name => p.id }
+}
+
+# Discover environments within a project
+data "dokploy_environments" "all" {
+  project_id = "your-project-id"
+}
+
+output "environment_ids" {
+  value = { for e in data.dokploy_environments.all.environments : e.name => e.id }
+}
+```
+
+Run `terraform apply` to see the IDs:
+
+```bash
+terraform apply -target=data.dokploy_projects.all
+```
+
+#### Step 2: Create Import Blocks (Terraform 1.5+)
+
+Using the discovered IDs, create import blocks:
+
+```hcl
+import {
+  to = dokploy_project.existing
+  id = "abc123-project-id"
+}
+
+import {
+  to = dokploy_environment.prod
+  id = "def456-environment-id"
+}
+```
+
+#### Step 3: Generate Configuration
+
+Use Terraform to generate the resource configuration:
+
+```bash
+terraform plan -generate-config-out=generated.tf
+```
+
+#### Step 4: Import Resources
+
+```bash
+terraform apply
+```
+
+### Classic Import Command
+
+For Terraform versions before 1.5, use the import command:
+
+```bash
+terraform import dokploy_project.existing abc123-project-id
+terraform import dokploy_environment.prod def456-environment-id
+```
+
+### Import Helper Script
+
+A helper script is available to generate import blocks for all existing resources:
+
+```bash
+# Set environment variables
+export DOKPLOY_HOST="https://your-dokploy-instance.com"
+export DOKPLOY_API_KEY="your-api-key"
+
+# Generate import blocks
+./scripts/dokploy-import.sh > imports.tf
+
+# Generate configuration
+terraform plan -generate-config-out=generated.tf
+```
+
+### Available Data Sources for Discovery
+
+| Data Source | Description |
+|-------------|-------------|
+| `dokploy_projects` | List all projects |
+| `dokploy_environments` | List environments in a project (includes applications, databases) |
+| `dokploy_servers` | List all servers |
+| `dokploy_ssh_keys` | List all SSH keys |
+| `dokploy_registries` | List all container registries |
+| `dokploy_certificates` | List all SSL certificates |
+| `dokploy_destinations` | List all backup destinations |
+
+## Authentication
+
+The provider supports authentication via API key:
+
+```hcl
+provider "dokploy" {
+  host    = "https://your-dokploy-instance.com"
+  api_key = var.dokploy_api_key
+}
+```
+
+Or via environment variables:
+
+```bash
+export DOKPLOY_HOST="https://your-dokploy-instance.com"
+export DOKPLOY_API_KEY="your-api-key"
+```

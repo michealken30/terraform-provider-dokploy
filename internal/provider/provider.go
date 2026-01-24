@@ -14,9 +14,12 @@ import (
 
 	// Data sources
 	applicationds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/application"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/certificates"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/destinations"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/environments"
 	projectds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/project"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/projects"
+	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/registries"
 	serverds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/server"
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/servers"
 	sshkeyds "github.com/reserve-protocol/terraform-provider-dokploy/internal/datasource/sshkey"
@@ -154,5 +157,8 @@ func (p *DokployProvider) DataSources(ctx context.Context) []func() datasource.D
 		sshkeyds.NewDataSource,
 		environments.NewDataSource,
 		applicationds.NewDataSource,
+		certificates.NewDataSource,
+		destinations.NewDataSource,
+		registries.NewDataSource,
 	}
 }

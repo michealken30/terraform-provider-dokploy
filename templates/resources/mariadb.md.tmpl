@@ -1,0 +1,57 @@
+---
+page_title: "dokploy_mariadb Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy MariaDB database.
+---
+
+# dokploy_mariadb (Resource)
+
+Manages a Dokploy MariaDB database service within an environment.
+
+## Example Usage
+
+{{ tffile "examples/resources/mariadb/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+MariaDB databases can be imported using their ID:
+
+```shell
+terraform import dokploy_mariadb.example stu901-mariadb-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_mariadb.example
+  id = "stu901-mariadb-id"
+}
+```
+
+### Finding MariaDB IDs
+
+Use the `dokploy_environments` data source to discover MariaDB IDs within environments:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "mariadb_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.all.environments : [
+      for m in env.mariadb : {
+        environment = env.name
+        name        = m.name
+        id          = m.id
+      }
+    ]
+  ])
+}
+```
+
+~> **Note:** Sensitive values like `database_password` and `database_root_password` will not be populated during import. You will need to set these values in your configuration after import.

@@ -1,0 +1,45 @@
+---
+page_title: "dokploy_server Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy server.
+---
+
+# dokploy_server (Resource)
+
+Manages a Dokploy server. Servers are deployment targets for applications and services.
+
+## Example Usage
+
+{{ tffile "examples/resources/server/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Servers can be imported using their ID:
+
+```shell
+terraform import dokploy_server.example bcd890-server-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_server.example
+  id = "bcd890-server-id"
+}
+```
+
+### Finding Server IDs
+
+Use the `dokploy_servers` data source to discover server IDs:
+
+```hcl
+data "dokploy_servers" "all" {}
+
+output "server_ids" {
+  value = { for s in data.dokploy_servers.all.servers : s.name => s.id }
+}
+```

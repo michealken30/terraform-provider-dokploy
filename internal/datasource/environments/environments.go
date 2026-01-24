@@ -41,6 +41,8 @@ type EnvironmentModel struct {
 	Compose      []ComposeModel     `tfsdk:"compose"`
 	Postgres     []PostgresModel    `tfsdk:"postgres"`
 	MySQL        []MySQLModel       `tfsdk:"mysql"`
+	MariaDB      []MariaDBModel     `tfsdk:"mariadb"`
+	Mongo        []MongoModel       `tfsdk:"mongo"`
 	Redis        []RedisModel       `tfsdk:"redis"`
 }
 
@@ -70,6 +72,22 @@ type PostgresModel struct {
 
 // MySQLModel describes a MySQL database summary.
 type MySQLModel struct {
+	ID       types.String `tfsdk:"id"`
+	Name     types.String `tfsdk:"name"`
+	Status   types.String `tfsdk:"status"`
+	ServerID types.String `tfsdk:"server_id"`
+}
+
+// MariaDBModel describes a MariaDB database summary.
+type MariaDBModel struct {
+	ID       types.String `tfsdk:"id"`
+	Name     types.String `tfsdk:"name"`
+	Status   types.String `tfsdk:"status"`
+	ServerID types.String `tfsdk:"server_id"`
+}
+
+// MongoModel describes a MongoDB database summary.
+type MongoModel struct {
 	ID       types.String `tfsdk:"id"`
 	Name     types.String `tfsdk:"name"`
 	Status   types.String `tfsdk:"status"`
@@ -168,6 +186,20 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 								Attributes: serviceAttributes,
 							},
 						},
+						"mariadb": schema.ListNestedAttribute{
+							Description: "List of MariaDB databases in the environment.",
+							Computed:    true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: serviceAttributes,
+							},
+						},
+						"mongo": schema.ListNestedAttribute{
+							Description: "List of MongoDB databases in the environment.",
+							Computed:    true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: serviceAttributes,
+							},
+						},
 						"redis": schema.ListNestedAttribute{
 							Description: "List of Redis databases in the environment.",
 							Computed:    true,
@@ -233,6 +265,8 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			Compose:      []ComposeModel{},
 			Postgres:     []PostgresModel{},
 			MySQL:        []MySQLModel{},
+			MariaDB:      []MariaDBModel{},
+			Mongo:        []MongoModel{},
 			Redis:        []RedisModel{},
 		}
 
@@ -284,6 +318,32 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 				ID:       types.StringValue(mysql.MySQLID),
 				Name:     types.StringValue(mysql.Name),
 				Status:   types.StringValue(mysql.ApplicationStatus),
+				ServerID: types.StringValue(serverID),
+			})
+		}
+
+		for _, mariadb := range env.MariaDB {
+			serverID := ""
+			if mariadb.ServerID != nil {
+				serverID = *mariadb.ServerID
+			}
+			envModel.MariaDB = append(envModel.MariaDB, MariaDBModel{
+				ID:       types.StringValue(mariadb.MariaDBID),
+				Name:     types.StringValue(mariadb.Name),
+				Status:   types.StringValue(mariadb.ApplicationStatus),
+				ServerID: types.StringValue(serverID),
+			})
+		}
+
+		for _, mongo := range env.Mongo {
+			serverID := ""
+			if mongo.ServerID != nil {
+				serverID = *mongo.ServerID
+			}
+			envModel.Mongo = append(envModel.Mongo, MongoModel{
+				ID:       types.StringValue(mongo.MongoID),
+				Name:     types.StringValue(mongo.Name),
+				Status:   types.StringValue(mongo.ApplicationStatus),
 				ServerID: types.StringValue(serverID),
 			})
 		}

@@ -1,0 +1,57 @@
+---
+page_title: "dokploy_mongo Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy MongoDB database.
+---
+
+# dokploy_mongo (Resource)
+
+Manages a Dokploy MongoDB database service within an environment.
+
+## Example Usage
+
+{{ tffile "examples/resources/mongo/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+MongoDB databases can be imported using their ID:
+
+```shell
+terraform import dokploy_mongo.example vwx234-mongo-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_mongo.example
+  id = "vwx234-mongo-id"
+}
+```
+
+### Finding MongoDB IDs
+
+Use the `dokploy_environments` data source to discover MongoDB IDs within environments:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "mongo_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.all.environments : [
+      for m in env.mongo : {
+        environment = env.name
+        name        = m.name
+        id          = m.id
+      }
+    ]
+  ])
+}
+```
+
+~> **Note:** Sensitive values like `database_password` will not be populated during import. You will need to set these values in your configuration after import.

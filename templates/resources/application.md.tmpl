@@ -1,0 +1,55 @@
+---
+page_title: "dokploy_application Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy application.
+---
+
+# dokploy_application (Resource)
+
+Manages a Dokploy application. Applications are deployable services within an environment.
+
+## Example Usage
+
+{{ tffile "examples/resources/application/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Applications can be imported using their ID:
+
+```shell
+terraform import dokploy_application.example ghi789-application-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_application.example
+  id = "ghi789-application-id"
+}
+```
+
+### Finding Application IDs
+
+Use the `dokploy_environments` data source to discover application IDs within environments:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "application_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.all.environments : [
+      for app in env.applications : {
+        environment = env.name
+        name        = app.name
+        id          = app.id
+      }
+    ]
+  ])
+}
+```

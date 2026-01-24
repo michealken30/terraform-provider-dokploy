@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_projects Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all projects from Dokploy.
+---
+
+# dokploy_projects (Data Source)
+
+Fetches all projects from Dokploy. Use this data source to discover project IDs for importing existing resources.
+
+## Example Usage
+
+```hcl
+data "dokploy_projects" "all" {}
+
+# Output all project IDs for import discovery
+output "project_ids" {
+  value = { for p in data.dokploy_projects.all.projects : p.name => p.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

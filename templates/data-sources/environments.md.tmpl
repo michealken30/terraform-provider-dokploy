@@ -1,0 +1,53 @@
+---
+page_title: "dokploy_environments Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all environments for a project from Dokploy.
+---
+
+# dokploy_environments (Data Source)
+
+Fetches all environments for a project from Dokploy, including all applications, compose services, and databases within each environment. Use this data source to discover resource IDs for importing existing infrastructure.
+
+## Example Usage
+
+```hcl
+data "dokploy_projects" "all" {}
+
+data "dokploy_environments" "main" {
+  project_id = [for p in data.dokploy_projects.all.projects : p.id if p.name == "my-project"][0]
+}
+
+# Output all environment IDs
+output "environment_ids" {
+  value = { for e in data.dokploy_environments.main.environments : e.name => e.id }
+}
+
+# Output all application IDs across environments
+output "application_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.main.environments : [
+      for app in env.applications : {
+        environment = env.name
+        name        = app.name
+        id          = app.id
+      }
+    ]
+  ])
+}
+
+# Output all database IDs
+output "postgres_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.main.environments : [
+      for pg in env.postgres : {
+        environment = env.name
+        name        = pg.name
+        id          = pg.id
+      }
+    ]
+  ])
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

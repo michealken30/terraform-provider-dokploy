@@ -1,0 +1,45 @@
+---
+page_title: "dokploy_project Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy project.
+---
+
+# dokploy_project (Resource)
+
+Manages a Dokploy project. Projects are top-level containers that organize environments and services.
+
+## Example Usage
+
+{{ tffile "examples/resources/project/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Projects can be imported using their ID:
+
+```shell
+terraform import dokploy_project.example abc123-project-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_project.example
+  id = "abc123-project-id"
+}
+```
+
+### Finding Project IDs
+
+Use the `dokploy_projects` data source to discover project IDs:
+
+```hcl
+data "dokploy_projects" "all" {}
+
+output "project_ids" {
+  value = { for p in data.dokploy_projects.all.projects : p.name => p.id }
+}
+```

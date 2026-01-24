@@ -1,0 +1,57 @@
+---
+page_title: "dokploy_redis Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy Redis database.
+---
+
+# dokploy_redis (Resource)
+
+Manages a Dokploy Redis database service within an environment.
+
+## Example Usage
+
+{{ tffile "examples/resources/redis/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Redis databases can be imported using their ID:
+
+```shell
+terraform import dokploy_redis.example yza567-redis-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_redis.example
+  id = "yza567-redis-id"
+}
+```
+
+### Finding Redis IDs
+
+Use the `dokploy_environments` data source to discover Redis IDs within environments:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "redis_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.all.environments : [
+      for r in env.redis : {
+        environment = env.name
+        name        = r.name
+        id          = r.id
+      }
+    ]
+  ])
+}
+```
+
+~> **Note:** Sensitive values like `database_password` will not be populated during import. You will need to set these values in your configuration after import.

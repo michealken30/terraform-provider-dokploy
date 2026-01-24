@@ -1,0 +1,57 @@
+---
+page_title: "dokploy_mysql Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy MySQL database.
+---
+
+# dokploy_mysql (Resource)
+
+Manages a Dokploy MySQL database service within an environment.
+
+## Example Usage
+
+{{ tffile "examples/resources/mysql/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+MySQL databases can be imported using their ID:
+
+```shell
+terraform import dokploy_mysql.example pqr678-mysql-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_mysql.example
+  id = "pqr678-mysql-id"
+}
+```
+
+### Finding MySQL IDs
+
+Use the `dokploy_environments` data source to discover MySQL IDs within environments:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "mysql_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.all.environments : [
+      for m in env.mysql : {
+        environment = env.name
+        name        = m.name
+        id          = m.id
+      }
+    ]
+  ])
+}
+```
+
+~> **Note:** Sensitive values like `database_password` and `database_root_password` will not be populated during import. You will need to set these values in your configuration after import.

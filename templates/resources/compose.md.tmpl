@@ -1,0 +1,55 @@
+---
+page_title: "dokploy_compose Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy Docker Compose service.
+---
+
+# dokploy_compose (Resource)
+
+Manages a Dokploy Docker Compose service. Compose services allow deploying multi-container applications defined in docker-compose.yml files.
+
+## Example Usage
+
+{{ tffile "examples/resources/compose/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Compose services can be imported using their ID:
+
+```shell
+terraform import dokploy_compose.example jkl012-compose-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_compose.example
+  id = "jkl012-compose-id"
+}
+```
+
+### Finding Compose IDs
+
+Use the `dokploy_environments` data source to discover compose IDs within environments:
+
+```hcl
+data "dokploy_environments" "all" {
+  project_id = dokploy_project.example.id
+}
+
+output "compose_ids" {
+  value = flatten([
+    for env in data.dokploy_environments.all.environments : [
+      for c in env.compose : {
+        environment = env.name
+        name        = c.name
+        id          = c.id
+      }
+    ]
+  ])
+}
+```

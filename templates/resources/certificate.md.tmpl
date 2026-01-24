@@ -1,0 +1,47 @@
+---
+page_title: "dokploy_certificate Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy SSL certificate.
+---
+
+# dokploy_certificate (Resource)
+
+Manages a Dokploy SSL certificate. Certificates are used for HTTPS on custom domains.
+
+## Example Usage
+
+{{ tffile "examples/resources/certificate/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Certificates can be imported using their ID:
+
+```shell
+terraform import dokploy_certificate.example klm789-certificate-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_certificate.example
+  id = "klm789-certificate-id"
+}
+```
+
+### Finding Certificate IDs
+
+Use the `dokploy_certificates` data source to discover certificate IDs:
+
+```hcl
+data "dokploy_certificates" "all" {}
+
+output "certificate_ids" {
+  value = { for c in data.dokploy_certificates.all.certificates : c.name => c.id }
+}
+```
+
+~> **Note:** The `private_key` value will not be populated during import. You will need to set this value in your configuration after import.

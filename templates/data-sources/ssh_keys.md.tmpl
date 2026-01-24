@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_ssh_keys Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all SSH keys from Dokploy.
+---
+
+# dokploy_ssh_keys (Data Source)
+
+Fetches all SSH keys from Dokploy. Use this data source to discover SSH key IDs for importing existing resources.
+
+## Example Usage
+
+```hcl
+data "dokploy_ssh_keys" "all" {}
+
+# Output all SSH key IDs for import discovery
+output "ssh_key_ids" {
+  value = { for k in data.dokploy_ssh_keys.all.ssh_keys : k.name => k.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_servers Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all servers from Dokploy.
+---
+
+# dokploy_servers (Data Source)
+
+Fetches all servers from Dokploy. Use this data source to discover server IDs for importing existing resources.
+
+## Example Usage
+
+```hcl
+data "dokploy_servers" "all" {}
+
+# Output all server IDs for import discovery
+output "server_ids" {
+  value = { for s in data.dokploy_servers.all.servers : s.name => s.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

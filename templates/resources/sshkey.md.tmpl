@@ -1,0 +1,47 @@
+---
+page_title: "dokploy_ssh_key Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy SSH key.
+---
+
+# dokploy_ssh_key (Resource)
+
+Manages a Dokploy SSH key. SSH keys are used for server authentication and Git repository access.
+
+## Example Usage
+
+{{ tffile "examples/resources/sshkey/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+SSH keys can be imported using their ID:
+
+```shell
+terraform import dokploy_ssh_key.example efg123-sshkey-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_ssh_key.example
+  id = "efg123-sshkey-id"
+}
+```
+
+### Finding SSH Key IDs
+
+Use the `dokploy_ssh_keys` data source to discover SSH key IDs:
+
+```hcl
+data "dokploy_ssh_keys" "all" {}
+
+output "ssh_key_ids" {
+  value = { for k in data.dokploy_ssh_keys.all.ssh_keys : k.name => k.id }
+}
+```
+
+~> **Note:** The `private_key` value will not be populated during import. You will need to set this value in your configuration after import if you want Terraform to manage it.

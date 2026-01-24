@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_certificates Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all SSL certificates from Dokploy.
+---
+
+# dokploy_certificates (Data Source)
+
+Fetches all SSL certificates from Dokploy. Use this data source to discover certificate IDs for importing existing resources.
+
+## Example Usage
+
+```hcl
+data "dokploy_certificates" "all" {}
+
+# Output all certificate IDs for import discovery
+output "certificate_ids" {
+  value = { for c in data.dokploy_certificates.all.certificates : c.name => c.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

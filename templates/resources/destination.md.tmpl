@@ -1,0 +1,47 @@
+---
+page_title: "dokploy_destination Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy backup destination.
+---
+
+# dokploy_destination (Resource)
+
+Manages a Dokploy backup destination. Destinations are S3-compatible storage locations for database backups.
+
+## Example Usage
+
+{{ tffile "examples/resources/destination/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Destinations can be imported using their ID:
+
+```shell
+terraform import dokploy_destination.example nop012-destination-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_destination.example
+  id = "nop012-destination-id"
+}
+```
+
+### Finding Destination IDs
+
+Use the `dokploy_destinations` data source to discover destination IDs:
+
+```hcl
+data "dokploy_destinations" "all" {}
+
+output "destination_ids" {
+  value = { for d in data.dokploy_destinations.all.destinations : d.name => d.id }
+}
+```
+
+~> **Note:** Sensitive values like `access_key` and `secret_access_key` will not be populated during import. You will need to set these values in your configuration after import.

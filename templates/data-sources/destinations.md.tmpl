@@ -1,0 +1,23 @@
+---
+page_title: "dokploy_destinations Data Source - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Fetches all backup destinations from Dokploy.
+---
+
+# dokploy_destinations (Data Source)
+
+Fetches all backup destinations from Dokploy. Use this data source to discover destination IDs for importing existing resources.
+
+## Example Usage
+
+```hcl
+data "dokploy_destinations" "all" {}
+
+# Output all destination IDs for import discovery
+output "destination_ids" {
+  value = { for d in data.dokploy_destinations.all.destinations : d.name => d.id }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
