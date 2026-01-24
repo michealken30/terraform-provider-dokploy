@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_redirect Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy redirect rule for an application.
+---
+
+# dokploy_redirect (Resource)
+
+Manages a Dokploy redirect rule for an application. Redirects use regex patterns to match and rewrite URLs.
+
+## Example Usage
+
+{{ tffile "examples/resources/redirect/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Redirects can be imported using their ID:
+
+```shell
+terraform import dokploy_redirect.example abc123-redirect-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_redirect.example
+  id = "abc123-redirect-id"
+}
+```

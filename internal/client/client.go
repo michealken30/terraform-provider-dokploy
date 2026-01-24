@@ -1562,3 +1562,673 @@ func (c *Client) DeleteRedis(ctx context.Context, redisID string) error {
 	req := DeleteRedisRequest{RedisID: redisID}
 	return c.doDeleteRequest(ctx, "/redis.delete", req)
 }
+
+// =============================================================================
+// Domain CRUD Operations
+// =============================================================================
+
+// CreateDomainRequest represents the request body for creating a domain
+type CreateDomainRequest struct {
+	Host               string  `json:"host"`
+	Path               *string `json:"path,omitempty"`
+	Port               *int    `json:"port,omitempty"`
+	HTTPS              bool    `json:"https"`
+	CertificateType    string  `json:"certificateType"`
+	CustomCertResolver *string `json:"customCertResolver,omitempty"`
+	ApplicationID      *string `json:"applicationId,omitempty"`
+	ComposeID          *string `json:"composeId,omitempty"`
+	ServiceName        *string `json:"serviceName,omitempty"`
+	DomainType         *string `json:"domainType,omitempty"`
+	InternalPath       *string `json:"internalPath,omitempty"`
+	StripPath          bool    `json:"stripPath"`
+}
+
+// CreateDomainResponse represents the response from creating a domain
+type CreateDomainResponse struct {
+	DomainID string `json:"domainId"`
+}
+
+// UpdateDomainRequest represents the request body for updating a domain
+type UpdateDomainRequest struct {
+	DomainID           string  `json:"domainId"`
+	Host               string  `json:"host"`
+	Path               *string `json:"path,omitempty"`
+	Port               *int    `json:"port,omitempty"`
+	HTTPS              bool    `json:"https"`
+	CertificateType    string  `json:"certificateType"`
+	CustomCertResolver *string `json:"customCertResolver,omitempty"`
+	ServiceName        *string `json:"serviceName,omitempty"`
+	DomainType         *string `json:"domainType,omitempty"`
+	InternalPath       *string `json:"internalPath,omitempty"`
+	StripPath          bool    `json:"stripPath"`
+}
+
+// DeleteDomainRequest represents the request body for deleting a domain
+type DeleteDomainRequest struct {
+	DomainID string `json:"domainId"`
+}
+
+// GetDomainRequest represents the request body for getting a domain
+type GetDomainRequest struct {
+	DomainID string `json:"domainId"`
+}
+
+// CreateDomain creates a new domain
+func (c *Client) CreateDomain(ctx context.Context, req CreateDomainRequest) (*CreateDomainResponse, error) {
+	data, err := c.doPostRequest(ctx, "/domain.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating domain: %w", err)
+	}
+
+	var resp CreateDomainResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create domain response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetDomain fetches a single domain by ID
+func (c *Client) GetDomain(ctx context.Context, domainID string) (*Domain, error) {
+	req := GetDomainRequest{DomainID: domainID}
+	data, err := c.doPostRequest(ctx, "/domain.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching domain: %w", err)
+	}
+
+	var domain Domain
+	if err := json.Unmarshal(data, &domain); err != nil {
+		return nil, fmt.Errorf("parsing domain: %w", err)
+	}
+
+	return &domain, nil
+}
+
+// UpdateDomain updates an existing domain
+func (c *Client) UpdateDomain(ctx context.Context, req UpdateDomainRequest) error {
+	_, err := c.doPostRequest(ctx, "/domain.update", req)
+	if err != nil {
+		return fmt.Errorf("updating domain: %w", err)
+	}
+	return nil
+}
+
+// DeleteDomain deletes a domain
+func (c *Client) DeleteDomain(ctx context.Context, domainID string) error {
+	req := DeleteDomainRequest{DomainID: domainID}
+	return c.doDeleteRequest(ctx, "/domain.delete", req)
+}
+
+// =============================================================================
+// Port CRUD Operations
+// =============================================================================
+
+// CreatePortRequest represents the request body for creating a port
+type CreatePortRequest struct {
+	PublishedPort int    `json:"publishedPort"`
+	TargetPort    int    `json:"targetPort"`
+	Protocol      string `json:"protocol"`
+	PublishMode   string `json:"publishMode"`
+	ApplicationID string `json:"applicationId"`
+}
+
+// CreatePortResponse represents the response from creating a port
+type CreatePortResponse struct {
+	PortID string `json:"portId"`
+}
+
+// UpdatePortRequest represents the request body for updating a port
+type UpdatePortRequest struct {
+	PortID        string `json:"portId"`
+	PublishedPort int    `json:"publishedPort"`
+	TargetPort    int    `json:"targetPort"`
+	Protocol      string `json:"protocol"`
+	PublishMode   string `json:"publishMode"`
+}
+
+// DeletePortRequest represents the request body for deleting a port
+type DeletePortRequest struct {
+	PortID string `json:"portId"`
+}
+
+// GetPortRequest represents the request body for getting a port
+type GetPortRequest struct {
+	PortID string `json:"portId"`
+}
+
+// CreatePort creates a new port
+func (c *Client) CreatePort(ctx context.Context, req CreatePortRequest) (*CreatePortResponse, error) {
+	data, err := c.doPostRequest(ctx, "/port.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating port: %w", err)
+	}
+
+	var resp CreatePortResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create port response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetPort fetches a single port by ID
+func (c *Client) GetPort(ctx context.Context, portID string) (*Port, error) {
+	req := GetPortRequest{PortID: portID}
+	data, err := c.doPostRequest(ctx, "/port.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching port: %w", err)
+	}
+
+	var port Port
+	if err := json.Unmarshal(data, &port); err != nil {
+		return nil, fmt.Errorf("parsing port: %w", err)
+	}
+
+	return &port, nil
+}
+
+// UpdatePort updates an existing port
+func (c *Client) UpdatePort(ctx context.Context, req UpdatePortRequest) error {
+	_, err := c.doPostRequest(ctx, "/port.update", req)
+	if err != nil {
+		return fmt.Errorf("updating port: %w", err)
+	}
+	return nil
+}
+
+// DeletePort deletes a port
+func (c *Client) DeletePort(ctx context.Context, portID string) error {
+	req := DeletePortRequest{PortID: portID}
+	return c.doDeleteRequest(ctx, "/port.delete", req)
+}
+
+// =============================================================================
+// Mount CRUD Operations
+// =============================================================================
+
+// CreateMountRequest represents the request body for creating a mount
+type CreateMountRequest struct {
+	Type        string  `json:"type"`
+	HostPath    *string `json:"hostPath,omitempty"`
+	VolumeName  *string `json:"volumeName,omitempty"`
+	Content     *string `json:"content,omitempty"`
+	FilePath    *string `json:"filePath,omitempty"`
+	MountPath   string  `json:"mountPath"`
+	ServiceType string  `json:"serviceType"`
+	ServiceID   string  `json:"serviceId"`
+}
+
+// CreateMountResponse represents the response from creating a mount
+type CreateMountResponse struct {
+	MountID string `json:"mountId"`
+}
+
+// UpdateMountRequest represents the request body for updating a mount
+type UpdateMountRequest struct {
+	MountID     string  `json:"mountId"`
+	Type        *string `json:"type,omitempty"`
+	HostPath    *string `json:"hostPath,omitempty"`
+	VolumeName  *string `json:"volumeName,omitempty"`
+	Content     *string `json:"content,omitempty"`
+	FilePath    *string `json:"filePath,omitempty"`
+	MountPath   *string `json:"mountPath,omitempty"`
+	ServiceType *string `json:"serviceType,omitempty"`
+}
+
+// DeleteMountRequest represents the request body for deleting a mount
+type DeleteMountRequest struct {
+	MountID string `json:"mountId"`
+}
+
+// GetMountRequest represents the request body for getting a mount
+type GetMountRequest struct {
+	MountID string `json:"mountId"`
+}
+
+// CreateMount creates a new mount
+func (c *Client) CreateMount(ctx context.Context, req CreateMountRequest) (*CreateMountResponse, error) {
+	data, err := c.doPostRequest(ctx, "/mounts.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating mount: %w", err)
+	}
+
+	var resp CreateMountResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create mount response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetMount fetches a single mount by ID
+func (c *Client) GetMount(ctx context.Context, mountID string) (*Mount, error) {
+	req := GetMountRequest{MountID: mountID}
+	data, err := c.doPostRequest(ctx, "/mounts.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching mount: %w", err)
+	}
+
+	var mount Mount
+	if err := json.Unmarshal(data, &mount); err != nil {
+		return nil, fmt.Errorf("parsing mount: %w", err)
+	}
+
+	return &mount, nil
+}
+
+// UpdateMount updates an existing mount
+func (c *Client) UpdateMount(ctx context.Context, req UpdateMountRequest) error {
+	_, err := c.doPostRequest(ctx, "/mounts.update", req)
+	if err != nil {
+		return fmt.Errorf("updating mount: %w", err)
+	}
+	return nil
+}
+
+// DeleteMount deletes a mount
+func (c *Client) DeleteMount(ctx context.Context, mountID string) error {
+	req := DeleteMountRequest{MountID: mountID}
+	return c.doDeleteRequest(ctx, "/mounts.remove", req)
+}
+
+// =============================================================================
+// Security CRUD Operations
+// =============================================================================
+
+// CreateSecurityRequest represents the request body for creating a security entry
+type CreateSecurityRequest struct {
+	ApplicationID string `json:"applicationId"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+}
+
+// CreateSecurityResponse represents the response from creating a security entry
+type CreateSecurityResponse struct {
+	SecurityID string `json:"securityId"`
+}
+
+// UpdateSecurityRequest represents the request body for updating a security entry
+type UpdateSecurityRequest struct {
+	SecurityID string `json:"securityId"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+}
+
+// DeleteSecurityRequest represents the request body for deleting a security entry
+type DeleteSecurityRequest struct {
+	SecurityID string `json:"securityId"`
+}
+
+// GetSecurityRequest represents the request body for getting a security entry
+type GetSecurityRequest struct {
+	SecurityID string `json:"securityId"`
+}
+
+// Security represents a security (basic auth) configuration
+type Security struct {
+	SecurityID    string `json:"securityId"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	ApplicationID string `json:"applicationId"`
+}
+
+// CreateSecurity creates a new security entry
+func (c *Client) CreateSecurity(ctx context.Context, req CreateSecurityRequest) (*CreateSecurityResponse, error) {
+	data, err := c.doPostRequest(ctx, "/security.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating security: %w", err)
+	}
+
+	var resp CreateSecurityResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create security response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetSecurity fetches a single security entry by ID
+func (c *Client) GetSecurity(ctx context.Context, securityID string) (*Security, error) {
+	req := GetSecurityRequest{SecurityID: securityID}
+	data, err := c.doPostRequest(ctx, "/security.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching security: %w", err)
+	}
+
+	var security Security
+	if err := json.Unmarshal(data, &security); err != nil {
+		return nil, fmt.Errorf("parsing security: %w", err)
+	}
+
+	return &security, nil
+}
+
+// UpdateSecurity updates an existing security entry
+func (c *Client) UpdateSecurity(ctx context.Context, req UpdateSecurityRequest) error {
+	_, err := c.doPostRequest(ctx, "/security.update", req)
+	if err != nil {
+		return fmt.Errorf("updating security: %w", err)
+	}
+	return nil
+}
+
+// DeleteSecurity deletes a security entry
+func (c *Client) DeleteSecurity(ctx context.Context, securityID string) error {
+	req := DeleteSecurityRequest{SecurityID: securityID}
+	return c.doDeleteRequest(ctx, "/security.delete", req)
+}
+
+// =============================================================================
+// Redirect CRUD Operations
+// =============================================================================
+
+// CreateRedirectRequest represents the request body for creating a redirect
+type CreateRedirectRequest struct {
+	Regex         string `json:"regex"`
+	Replacement   string `json:"replacement"`
+	Permanent     bool   `json:"permanent"`
+	ApplicationID string `json:"applicationId"`
+}
+
+// CreateRedirectResponse represents the response from creating a redirect
+type CreateRedirectResponse struct {
+	RedirectID string `json:"redirectId"`
+}
+
+// UpdateRedirectRequest represents the request body for updating a redirect
+type UpdateRedirectRequest struct {
+	RedirectID  string `json:"redirectId"`
+	Regex       string `json:"regex"`
+	Replacement string `json:"replacement"`
+	Permanent   bool   `json:"permanent"`
+}
+
+// DeleteRedirectRequest represents the request body for deleting a redirect
+type DeleteRedirectRequest struct {
+	RedirectID string `json:"redirectId"`
+}
+
+// GetRedirectRequest represents the request body for getting a redirect
+type GetRedirectRequest struct {
+	RedirectID string `json:"redirectId"`
+}
+
+// Redirect represents a redirect configuration
+type Redirect struct {
+	RedirectID    string `json:"redirectId"`
+	Regex         string `json:"regex"`
+	Replacement   string `json:"replacement"`
+	Permanent     bool   `json:"permanent"`
+	ApplicationID string `json:"applicationId"`
+}
+
+// CreateRedirect creates a new redirect
+func (c *Client) CreateRedirect(ctx context.Context, req CreateRedirectRequest) (*CreateRedirectResponse, error) {
+	data, err := c.doPostRequest(ctx, "/redirects.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating redirect: %w", err)
+	}
+
+	var resp CreateRedirectResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create redirect response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetRedirect fetches a single redirect by ID
+func (c *Client) GetRedirect(ctx context.Context, redirectID string) (*Redirect, error) {
+	req := GetRedirectRequest{RedirectID: redirectID}
+	data, err := c.doPostRequest(ctx, "/redirects.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching redirect: %w", err)
+	}
+
+	var redirect Redirect
+	if err := json.Unmarshal(data, &redirect); err != nil {
+		return nil, fmt.Errorf("parsing redirect: %w", err)
+	}
+
+	return &redirect, nil
+}
+
+// UpdateRedirect updates an existing redirect
+func (c *Client) UpdateRedirect(ctx context.Context, req UpdateRedirectRequest) error {
+	_, err := c.doPostRequest(ctx, "/redirects.update", req)
+	if err != nil {
+		return fmt.Errorf("updating redirect: %w", err)
+	}
+	return nil
+}
+
+// DeleteRedirect deletes a redirect
+func (c *Client) DeleteRedirect(ctx context.Context, redirectID string) error {
+	req := DeleteRedirectRequest{RedirectID: redirectID}
+	return c.doDeleteRequest(ctx, "/redirects.delete", req)
+}
+
+// =============================================================================
+// Backup CRUD Operations
+// =============================================================================
+
+// CreateBackupRequest represents the request body for creating a backup
+type CreateBackupRequest struct {
+	Schedule        string  `json:"schedule"`
+	Enabled         *bool   `json:"enabled,omitempty"`
+	Prefix          string  `json:"prefix"`
+	DestinationID   string  `json:"destinationId"`
+	KeepLatestCount *int    `json:"keepLatestCount,omitempty"`
+	Database        string  `json:"database"`
+	DatabaseType    string  `json:"databaseType"`
+	BackupType      string  `json:"backupType"`
+	PostgresID      *string `json:"postgresId,omitempty"`
+	MysqlID         *string `json:"mysqlId,omitempty"`
+	MariadbID       *string `json:"mariadbId,omitempty"`
+	MongoID         *string `json:"mongoId,omitempty"`
+	ComposeID       *string `json:"composeId,omitempty"`
+	ServiceName     *string `json:"serviceName,omitempty"`
+}
+
+// CreateBackupResponse represents the response from creating a backup
+type CreateBackupResponse struct {
+	BackupID string `json:"backupId"`
+}
+
+// UpdateBackupRequest represents the request body for updating a backup
+type UpdateBackupRequest struct {
+	BackupID        string  `json:"backupId"`
+	Schedule        *string `json:"schedule,omitempty"`
+	Enabled         *bool   `json:"enabled,omitempty"`
+	Prefix          *string `json:"prefix,omitempty"`
+	DestinationID   *string `json:"destinationId,omitempty"`
+	KeepLatestCount *int    `json:"keepLatestCount,omitempty"`
+	Database        *string `json:"database,omitempty"`
+}
+
+// DeleteBackupRequest represents the request body for deleting a backup
+type DeleteBackupRequest struct {
+	BackupID string `json:"backupId"`
+}
+
+// GetBackupRequest represents the request body for getting a backup
+type GetBackupRequest struct {
+	BackupID string `json:"backupId"`
+}
+
+// Backup represents a backup configuration
+type Backup struct {
+	BackupID        string  `json:"backupId"`
+	Schedule        string  `json:"schedule"`
+	Enabled         bool    `json:"enabled"`
+	Prefix          string  `json:"prefix"`
+	DestinationID   string  `json:"destinationId"`
+	KeepLatestCount *int    `json:"keepLatestCount"`
+	Database        string  `json:"database"`
+	DatabaseType    string  `json:"databaseType"`
+	BackupType      string  `json:"backupType"`
+	PostgresID      *string `json:"postgresId"`
+	MysqlID         *string `json:"mysqlId"`
+	MariadbID       *string `json:"mariadbId"`
+	MongoID         *string `json:"mongoId"`
+	ComposeID       *string `json:"composeId"`
+	ServiceName     *string `json:"serviceName"`
+}
+
+// CreateBackup creates a new backup
+func (c *Client) CreateBackup(ctx context.Context, req CreateBackupRequest) (*CreateBackupResponse, error) {
+	data, err := c.doPostRequest(ctx, "/backup.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating backup: %w", err)
+	}
+
+	var resp CreateBackupResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create backup response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetBackup fetches a single backup by ID
+func (c *Client) GetBackup(ctx context.Context, backupID string) (*Backup, error) {
+	req := GetBackupRequest{BackupID: backupID}
+	data, err := c.doPostRequest(ctx, "/backup.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching backup: %w", err)
+	}
+
+	var backup Backup
+	if err := json.Unmarshal(data, &backup); err != nil {
+		return nil, fmt.Errorf("parsing backup: %w", err)
+	}
+
+	return &backup, nil
+}
+
+// UpdateBackup updates an existing backup
+func (c *Client) UpdateBackup(ctx context.Context, req UpdateBackupRequest) error {
+	_, err := c.doPostRequest(ctx, "/backup.update", req)
+	if err != nil {
+		return fmt.Errorf("updating backup: %w", err)
+	}
+	return nil
+}
+
+// DeleteBackup deletes a backup
+func (c *Client) DeleteBackup(ctx context.Context, backupID string) error {
+	req := DeleteBackupRequest{BackupID: backupID}
+	return c.doDeleteRequest(ctx, "/backup.remove", req)
+}
+
+// =============================================================================
+// Schedule CRUD Operations
+// =============================================================================
+
+// CreateScheduleRequest represents the request body for creating a schedule
+type CreateScheduleRequest struct {
+	Name           string  `json:"name"`
+	CronExpression string  `json:"cronExpression"`
+	Command        string  `json:"command"`
+	ShellType      string  `json:"shellType"`
+	ScheduleType   string  `json:"scheduleType"`
+	AppName        *string `json:"appName,omitempty"`
+	ServiceName    *string `json:"serviceName,omitempty"`
+	Script         *string `json:"script,omitempty"`
+	ApplicationID  *string `json:"applicationId,omitempty"`
+	ComposeID      *string `json:"composeId,omitempty"`
+	ServerID       *string `json:"serverId,omitempty"`
+	Enabled        bool    `json:"enabled"`
+	Timezone       *string `json:"timezone,omitempty"`
+}
+
+// CreateScheduleResponse represents the response from creating a schedule
+type CreateScheduleResponse struct {
+	ScheduleID string `json:"scheduleId"`
+}
+
+// UpdateScheduleRequest represents the request body for updating a schedule
+type UpdateScheduleRequest struct {
+	ScheduleID     string  `json:"scheduleId"`
+	Name           *string `json:"name,omitempty"`
+	CronExpression *string `json:"cronExpression,omitempty"`
+	Command        *string `json:"command,omitempty"`
+	ShellType      *string `json:"shellType,omitempty"`
+	Script         *string `json:"script,omitempty"`
+	Enabled        *bool   `json:"enabled,omitempty"`
+	Timezone       *string `json:"timezone,omitempty"`
+}
+
+// DeleteScheduleRequest represents the request body for deleting a schedule
+type DeleteScheduleRequest struct {
+	ScheduleID string `json:"scheduleId"`
+}
+
+// GetScheduleRequest represents the request body for getting a schedule
+type GetScheduleRequest struct {
+	ScheduleID string `json:"scheduleId"`
+}
+
+// Schedule represents a scheduled task configuration
+type Schedule struct {
+	ScheduleID     string  `json:"scheduleId"`
+	Name           string  `json:"name"`
+	CronExpression string  `json:"cronExpression"`
+	Command        string  `json:"command"`
+	ShellType      string  `json:"shellType"`
+	ScheduleType   string  `json:"scheduleType"`
+	AppName        string  `json:"appName"`
+	ServiceName    *string `json:"serviceName"`
+	Script         *string `json:"script"`
+	ApplicationID  *string `json:"applicationId"`
+	ComposeID      *string `json:"composeId"`
+	ServerID       *string `json:"serverId"`
+	Enabled        bool    `json:"enabled"`
+	Timezone       *string `json:"timezone"`
+}
+
+// CreateSchedule creates a new schedule
+func (c *Client) CreateSchedule(ctx context.Context, req CreateScheduleRequest) (*CreateScheduleResponse, error) {
+	data, err := c.doPostRequest(ctx, "/schedule.create", req)
+	if err != nil {
+		return nil, fmt.Errorf("creating schedule: %w", err)
+	}
+
+	var resp CreateScheduleResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing create schedule response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+// GetSchedule fetches a single schedule by ID
+func (c *Client) GetSchedule(ctx context.Context, scheduleID string) (*Schedule, error) {
+	req := GetScheduleRequest{ScheduleID: scheduleID}
+	data, err := c.doPostRequest(ctx, "/schedule.one", req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching schedule: %w", err)
+	}
+
+	var schedule Schedule
+	if err := json.Unmarshal(data, &schedule); err != nil {
+		return nil, fmt.Errorf("parsing schedule: %w", err)
+	}
+
+	return &schedule, nil
+}
+
+// UpdateSchedule updates an existing schedule
+func (c *Client) UpdateSchedule(ctx context.Context, req UpdateScheduleRequest) error {
+	_, err := c.doPostRequest(ctx, "/schedule.update", req)
+	if err != nil {
+		return fmt.Errorf("updating schedule: %w", err)
+	}
+	return nil
+}
+
+// DeleteSchedule deletes a schedule
+func (c *Client) DeleteSchedule(ctx context.Context, scheduleID string) error {
+	req := DeleteScheduleRequest{ScheduleID: scheduleID}
+	return c.doDeleteRequest(ctx, "/schedule.delete", req)
+}

@@ -27,18 +27,25 @@ import (
 
 	// Resources
 	applicationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/application"
+	backuprs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/backup"
 	bootstraprs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/bootstrap"
 	certificaters "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/certificate"
 	composers "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/compose"
 	destinationrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/destination"
+	domainrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/domain"
 	environmentrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/environment"
 	mariadbrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mariadb"
 	mongors "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mongo"
+	mountrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mount"
 	mysqlrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/mysql"
+	portrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/port"
 	postgresrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/postgres"
 	projectrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/project"
+	redirectrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/redirect"
 	redisrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/redis"
 	registryrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/registry"
+	schedulers "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/schedule"
+	securityrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/security"
 	serverrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/server"
 	sshkeyrs "github.com/reserve-protocol/terraform-provider-dokploy/internal/resource/sshkey"
 )
@@ -144,6 +151,13 @@ func (p *DokployProvider) Resources(ctx context.Context) []func() resource.Resou
 		registryrs.NewResource,
 		certificaters.NewResource,
 		destinationrs.NewResource,
+		domainrs.NewResource,
+		portrs.NewResource,
+		mountrs.NewResource,
+		securityrs.NewResource,
+		redirectrs.NewResource,
+		backuprs.NewResource,
+		schedulers.NewResource,
 	}
 }
 

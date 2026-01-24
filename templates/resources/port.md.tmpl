@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_port Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy port mapping for an application.
+---
+
+# dokploy_port (Resource)
+
+Manages a Dokploy port mapping for an application. Ports expose container ports to the host.
+
+## Example Usage
+
+{{ tffile "examples/resources/port/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Ports can be imported using their ID:
+
+```shell
+terraform import dokploy_port.example abc123-port-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_port.example
+  id = "abc123-port-id"
+}
+```

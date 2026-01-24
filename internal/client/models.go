@@ -212,15 +212,21 @@ type Redis struct {
 
 // Domain represents a domain configuration
 type Domain struct {
-	DomainID        string    `json:"domainId"`
-	Host            string    `json:"host"`
-	Port            *int      `json:"port"`
-	HTTPS           bool      `json:"https"`
-	CertificateType string    `json:"certificateType"`
-	ApplicationID   *string   `json:"applicationId"`
-	CreatedAt       time.Time `json:"createdAt"`
-	Path            string    `json:"path"`
-	UniqueConfigKey int       `json:"uniqueConfigKey"`
+	DomainID           string    `json:"domainId"`
+	Host               string    `json:"host"`
+	Port               *int      `json:"port"`
+	HTTPS              bool      `json:"https"`
+	CertificateType    string    `json:"certificateType"`
+	CustomCertResolver *string   `json:"customCertResolver"`
+	ApplicationID      *string   `json:"applicationId"`
+	ComposeID          *string   `json:"composeId"`
+	ServiceName        *string   `json:"serviceName"`
+	DomainType         *string   `json:"domainType"`
+	InternalPath       *string   `json:"internalPath"`
+	StripPath          bool      `json:"stripPath"`
+	CreatedAt          time.Time `json:"createdAt"`
+	Path               string    `json:"path"`
+	UniqueConfigKey    int       `json:"uniqueConfigKey"`
 }
 
 // Port represents a port mapping
@@ -229,6 +235,7 @@ type Port struct {
 	PublishedPort int     `json:"publishedPort"`
 	TargetPort    int     `json:"targetPort"`
 	Protocol      string  `json:"protocol"`
+	PublishMode   string  `json:"publishMode"`
 	ApplicationID *string `json:"applicationId"`
 }
 
@@ -239,9 +246,17 @@ type Mount struct {
 	HostPath      *string `json:"hostPath"`
 	VolumeName    *string `json:"volumeName"`
 	Content       *string `json:"content"`
+	FilePath      *string `json:"filePath"`
+	ServiceType   string  `json:"serviceType"`
 	ServiceConfig any     `json:"serviceConfig"`
 	MountPath     string  `json:"mountPath"`
 	ApplicationID *string `json:"applicationId"`
+	PostgresID    *string `json:"postgresId"`
+	MysqlID       *string `json:"mysqlId"`
+	MariadbID     *string `json:"mariadbId"`
+	MongoID       *string `json:"mongoId"`
+	RedisID       *string `json:"redisId"`
+	ComposeID     *string `json:"composeId"`
 }
 
 // Server represents a server configuration

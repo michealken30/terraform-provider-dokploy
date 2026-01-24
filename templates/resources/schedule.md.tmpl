@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_schedule Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy scheduled task (cron job) for an application, compose service, or server.
+---
+
+# dokploy_schedule (Resource)
+
+Manages a Dokploy scheduled task (cron job) for an application, compose service, or server. Schedules execute commands at specified intervals.
+
+## Example Usage
+
+{{ tffile "examples/resources/schedule/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Schedules can be imported using their ID:
+
+```shell
+terraform import dokploy_schedule.example abc123-schedule-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_schedule.example
+  id = "abc123-schedule-id"
+}
+```

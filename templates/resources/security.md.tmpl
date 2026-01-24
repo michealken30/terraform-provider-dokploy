@@ -1,0 +1,35 @@
+---
+page_title: "dokploy_security Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy security entry (basic auth) for an application.
+---
+
+# dokploy_security (Resource)
+
+Manages a Dokploy security entry for an application. Security entries provide HTTP basic authentication protection.
+
+## Example Usage
+
+{{ tffile "examples/resources/security/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Security entries can be imported using their ID:
+
+```shell
+terraform import dokploy_security.example abc123-security-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_security.example
+  id = "abc123-security-id"
+}
+```
+
+~> **Note:** The `password` value will not be accessible after import. You will need to set this value in your configuration after import.

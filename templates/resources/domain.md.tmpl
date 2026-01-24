@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_domain Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy domain for an application or compose service.
+---
+
+# dokploy_domain (Resource)
+
+Manages a Dokploy domain for an application or compose service. Domains expose applications via custom hostnames with optional SSL certificates.
+
+## Example Usage
+
+{{ tffile "examples/resources/domain/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Domains can be imported using their ID:
+
+```shell
+terraform import dokploy_domain.example abc123-domain-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_domain.example
+  id = "abc123-domain-id"
+}
+```

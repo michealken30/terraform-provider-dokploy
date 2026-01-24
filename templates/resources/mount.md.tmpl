@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_mount Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy mount (volume, bind, or file) for a service.
+---
+
+# dokploy_mount (Resource)
+
+Manages a Dokploy mount for a service. Supports bind mounts, Docker volumes, and file mounts.
+
+## Example Usage
+
+{{ tffile "examples/resources/mount/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Mounts can be imported using their ID:
+
+```shell
+terraform import dokploy_mount.example abc123-mount-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_mount.example
+  id = "abc123-mount-id"
+}
+```

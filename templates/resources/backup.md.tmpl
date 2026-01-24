@@ -1,0 +1,33 @@
+---
+page_title: "dokploy_backup Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages a Dokploy backup configuration for a database or compose service.
+---
+
+# dokploy_backup (Resource)
+
+Manages a Dokploy backup configuration for a database or compose service. Backups are scheduled using cron expressions and stored in S3-compatible destinations.
+
+## Example Usage
+
+{{ tffile "examples/resources/backup/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Backups can be imported using their ID:
+
+```shell
+terraform import dokploy_backup.example abc123-backup-id
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_backup.example
+  id = "abc123-backup-id"
+}
+```
