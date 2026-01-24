@@ -2786,3 +2786,121 @@ func (c *Client) UpdateGitea(ctx context.Context, req UpdateGiteaRequest) error 
 	}
 	return nil
 }
+
+// --- User Management ---
+
+// User represents a Dokploy user
+type User struct {
+	ID               string  `json:"id"`
+	Name             string  `json:"name"`
+	Email            string  `json:"email"`
+	Image            *string `json:"image,omitempty"`
+	IsRegistered     bool    `json:"isRegistered"`
+	EmailVerified    bool    `json:"emailVerified"`
+	TwoFactorEnabled *bool   `json:"twoFactorEnabled,omitempty"`
+	Banned           *bool   `json:"banned,omitempty"`
+	BanReason        *string `json:"banReason,omitempty"`
+	CreatedAt        *string `json:"createdAt,omitempty"`
+	UpdatedAt        *string `json:"updatedAt,omitempty"`
+	Role             *string `json:"role,omitempty"`
+	// Permissions
+	AccessedProjects        []string `json:"accessedProjects,omitempty"`
+	AccessedEnvironments    []string `json:"accessedEnvironments,omitempty"`
+	AccessedServices        []string `json:"accessedServices,omitempty"`
+	CanCreateProjects       *bool    `json:"canCreateProjects,omitempty"`
+	CanCreateServices       *bool    `json:"canCreateServices,omitempty"`
+	CanDeleteProjects       *bool    `json:"canDeleteProjects,omitempty"`
+	CanDeleteServices       *bool    `json:"canDeleteServices,omitempty"`
+	CanAccessToDocker       *bool    `json:"canAccessToDocker,omitempty"`
+	CanAccessToTraefikFiles *bool    `json:"canAccessToTraefikFiles,omitempty"`
+	CanAccessToAPI          *bool    `json:"canAccessToAPI,omitempty"`
+	CanAccessToSSHKeys      *bool    `json:"canAccessToSSHKeys,omitempty"`
+	CanAccessToGitProviders *bool    `json:"canAccessToGitProviders,omitempty"`
+	CanDeleteEnvironments   *bool    `json:"canDeleteEnvironments,omitempty"`
+	CanCreateEnvironments   *bool    `json:"canCreateEnvironments,omitempty"`
+}
+
+// UpdateUserRequest is the request to update a user
+type UpdateUserRequest struct {
+	ID       string  `json:"id"`
+	Name     *string `json:"name,omitempty"`
+	Email    *string `json:"email,omitempty"`
+	Image    *string `json:"image,omitempty"`
+	Password *string `json:"password,omitempty"`
+}
+
+// UserPermissionsRequest is the request to assign user permissions
+type UserPermissionsRequest struct {
+	ID                      string   `json:"id"`
+	AccessedProjects        []string `json:"accessedProjects"`
+	AccessedEnvironments    []string `json:"accessedEnvironments"`
+	AccessedServices        []string `json:"accessedServices"`
+	CanCreateProjects       bool     `json:"canCreateProjects"`
+	CanCreateServices       bool     `json:"canCreateServices"`
+	CanDeleteProjects       bool     `json:"canDeleteProjects"`
+	CanDeleteServices       bool     `json:"canDeleteServices"`
+	CanAccessToDocker       bool     `json:"canAccessToDocker"`
+	CanAccessToTraefikFiles bool     `json:"canAccessToTraefikFiles"`
+	CanAccessToAPI          bool     `json:"canAccessToAPI"`
+	CanAccessToSSHKeys      bool     `json:"canAccessToSSHKeys"`
+	CanAccessToGitProviders bool     `json:"canAccessToGitProviders"`
+	CanDeleteEnvironments   bool     `json:"canDeleteEnvironments"`
+	CanCreateEnvironments   bool     `json:"canCreateEnvironments"`
+}
+
+// GetUsers fetches all users
+func (c *Client) GetUsers(ctx context.Context) ([]User, error) {
+	data, err := c.doRequest(ctx, "/user.all")
+	if err != nil {
+		return nil, fmt.Errorf("fetching users: %w", err)
+	}
+	var users []User
+	if err := json.Unmarshal(data, &users); err != nil {
+		return nil, fmt.Errorf("parsing users: %w", err)
+	}
+	return users, nil
+}
+
+// GetUser fetches a specific user by ID
+func (c *Client) GetUser(ctx context.Context, userID string) (*User, error) {
+	users, err := c.GetUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		if user.ID == userID {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found: %s", userID)
+}
+
+// UpdateUser updates an existing user
+func (c *Client) UpdateUser(ctx context.Context, req UpdateUserRequest) error {
+	_, err := c.doPostRequest(ctx, "/user.update", req)
+	if err != nil {
+		return fmt.Errorf("updating user: %w", err)
+	}
+	return nil
+}
+
+// DeleteUser deletes a user
+func (c *Client) DeleteUser(ctx context.Context, userID string) error {
+	req := struct {
+		UserID string `json:"userId"`
+	}{UserID: userID}
+	_, err := c.doPostRequest(ctx, "/user.remove", req)
+	if err != nil {
+		return fmt.Errorf("deleting user: %w", err)
+	}
+	return nil
+}
+
+// AssignUserPermissions assigns permissions to a user
+func (c *Client) AssignUserPermissions(ctx context.Context, req UserPermissionsRequest) error {
+	_, err := c.doPostRequest(ctx, "/user.assignPermissions", req)
+	if err != nil {
+		return fmt.Errorf("assigning user permissions: %w", err)
+	}
+	return nil
+}

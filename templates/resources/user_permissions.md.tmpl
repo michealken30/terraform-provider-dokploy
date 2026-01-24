@@ -1,0 +1,39 @@
+---
+page_title: "dokploy_user_permissions Resource - terraform-provider-dokploy"
+subcategory: ""
+description: |-
+  Manages permissions for a Dokploy user.
+---
+
+# dokploy_user_permissions (Resource)
+
+Manages permissions for a Dokploy user. This resource allows you to declaratively define what projects, environments, and services a user can access, as well as their ability to create, delete, and manage infrastructure.
+
+~> **Note:** Users must already exist in Dokploy before permissions can be assigned. Users are typically created through the Dokploy UI invitation flow.
+
+## Example Usage
+
+{{ tffile "examples/resources/user_permissions/main.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+User permissions can be imported using the user ID:
+
+```shell
+terraform import dokploy_user_permissions.example user-abc123
+```
+
+Or using import blocks (Terraform 1.5+):
+
+```hcl
+import {
+  to = dokploy_user_permissions.example
+  id = "user-abc123"
+}
+```
+
+## Behavior on Destroy
+
+When this resource is destroyed, all permissions for the user are reset to their default (denied) state. The user account itself is not deleted.
