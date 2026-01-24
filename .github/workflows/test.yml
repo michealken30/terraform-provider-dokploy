@@ -37,6 +37,30 @@ jobs:
           version: latest
           args: --timeout=5m
 
+  docs:
+    name: Verify Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.*'
+          terraform_wrapper: false
+      - name: Generate docs
+        run: go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest generate
+      - name: Check for uncommitted changes
+        run: |
+          if [[ -n "$(git status --porcelain docs/)" ]]; then
+            echo "Documentation is out of date. Run 'make docs' and commit the changes."
+            git diff docs/
+            exit 1
+          fi
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
