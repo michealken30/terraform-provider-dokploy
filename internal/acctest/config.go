@@ -2,18 +2,13 @@ package acctest
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
+	"math/rand/v2"
 )
 
 // RandomName generates a unique name with a prefix for test resources.
 // Names are prefixed with "tf-test-" to make them easily identifiable for cleanup.
 func RandomName(prefix string) string {
-	return fmt.Sprintf("tf-test-%s-%d", prefix, rand.Int31())
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
+	return fmt.Sprintf("tf-test-%s-%d", prefix, rand.Int32())
 }
 
 // ConfigProject returns Terraform configuration for a project resource.

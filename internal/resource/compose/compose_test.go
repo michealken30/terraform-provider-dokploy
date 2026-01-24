@@ -1,11 +1,10 @@
 package compose_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/acctest"
 )
 
@@ -88,20 +87,4 @@ func TestAccComposeResource_import(t *testing.T) {
 			},
 		},
 	})
-}
-
-// testAccCheckComposeExists verifies the compose exists in the API.
-func testAccCheckComposeExists(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource ID is not set")
-		}
-
-		return nil
-	}
 }

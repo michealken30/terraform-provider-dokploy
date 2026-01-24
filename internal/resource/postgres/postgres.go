@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/client"
 )
 
@@ -356,6 +357,8 @@ func (r *PostgresResource) ImportState(ctx context.Context, req resource.ImportS
 // generateRandomPassword generates a random password of the specified length
 func generateRandomPassword(length int) string {
 	b := make([]byte, length)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic("failed to generate random password: " + err.Error())
+	}
 	return base64.URLEncoding.EncodeToString(b)[:length]
 }

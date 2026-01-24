@@ -1,11 +1,10 @@
 package postgres_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/reserve-protocol/terraform-provider-dokploy/internal/acctest"
 )
 
@@ -93,20 +92,4 @@ func TestAccPostgresResource_import(t *testing.T) {
 			},
 		},
 	})
-}
-
-// testAccCheckPostgresExists verifies the postgres exists in the API.
-func testAccCheckPostgresExists(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource ID is not set")
-		}
-
-		return nil
-	}
 }
