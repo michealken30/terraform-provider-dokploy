@@ -323,9 +323,22 @@ func (r *PostgresResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	// Update state with plan values
+	// Update state with plan values, preserving computed fields from state
 	plan.ID = state.ID
 	plan.AppName = state.AppName
+	// Preserve computed values that weren't explicitly set in config
+	if plan.DockerImage.IsUnknown() {
+		plan.DockerImage = state.DockerImage
+	}
+	if plan.DatabaseName.IsUnknown() {
+		plan.DatabaseName = state.DatabaseName
+	}
+	if plan.DatabaseUser.IsUnknown() {
+		plan.DatabaseUser = state.DatabaseUser
+	}
+	if plan.DatabasePassword.IsUnknown() {
+		plan.DatabasePassword = state.DatabasePassword
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
