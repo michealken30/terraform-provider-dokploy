@@ -301,20 +301,22 @@ func TestDeleteApplication_Error(t *testing.T) {
 }
 
 func TestGetEnvironment_Success(t *testing.T) {
-	projects := []Project{
-		{
-			ProjectID: "proj-1",
-			Name:      "Project 1",
-			Environments: []Environment{
-				{EnvironmentID: "env-1", Name: "Production"},
-				{EnvironmentID: "env-2", Name: "Staging"},
-			},
-		},
+	env := Environment{
+		EnvironmentID: "env-2",
+		Name:          "Staging",
+		Description:   "Staging environment",
+		ProjectID:     "proj-1",
 	}
 
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/environment.one" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("environmentId"); got != "env-2" {
+			t.Errorf("expected environmentId=env-2, got %s", got)
+		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(projects)
+		json.NewEncoder(w).Encode(env)
 	})
 	defer server.Close()
 
@@ -330,21 +332,18 @@ func TestGetEnvironment_Success(t *testing.T) {
 	if result.Name != "Staging" {
 		t.Errorf("expected name 'Staging', got %s", result.Name)
 	}
+	if result.Description != "Staging environment" {
+		t.Errorf("expected description 'Staging environment', got %s", result.Description)
+	}
+	if result.ProjectID != "proj-1" {
+		t.Errorf("expected project ID proj-1, got %s", result.ProjectID)
+	}
 }
 
 func TestGetEnvironment_NotFound(t *testing.T) {
-	projects := []Project{
-		{
-			ProjectID: "proj-1",
-			Environments: []Environment{
-				{EnvironmentID: "env-1", Name: "Production"},
-			},
-		},
-	}
-
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(projects)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"error": "not found"}`))
 	})
 	defer server.Close()
 

@@ -712,22 +712,23 @@ func (c *Client) GetApplication(ctx context.Context, applicationID string) (*App
 	return nil, newNotFoundError("application", applicationID)
 }
 
-// GetEnvironment finds an environment by ID across all projects
+// GetEnvironment fetches a single environment by ID
 func (c *Client) GetEnvironment(ctx context.Context, environmentID string) (*Environment, error) {
-	projects, err := c.GetProjects(ctx)
+	endpoint := fmt.Sprintf("/environment.one?environmentId=%s", environmentID)
+	data, err := c.doRequest(ctx, endpoint)
 	if err != nil {
+		if IsNotFound(err) {
+			return nil, newNotFoundError("environment", environmentID)
+		}
 		return nil, err //coverage:ignore
 	}
 
-	for _, proj := range projects {
-		for i := range proj.Environments {
-			if proj.Environments[i].EnvironmentID == environmentID {
-				return &proj.Environments[i], nil
-			}
-		}
+	var env Environment
+	if err := json.Unmarshal(data, &env); err != nil {
+		return nil, fmt.Errorf("parsing environment: %w", err) //coverage:ignore
 	}
 
-	return nil, newNotFoundError("environment", environmentID)
+	return &env, nil
 }
 
 // GetEnvironmentsByProjectID fetches all environments for a project
