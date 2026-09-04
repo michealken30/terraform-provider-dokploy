@@ -8,24 +8,23 @@ import (
 )
 
 func TestGetCompose_Success(t *testing.T) {
-	projects := []Project{
-		{
-			ProjectID: "proj-1",
-			Environments: []Environment{
-				{
-					EnvironmentID: "env-1",
-					Compose: []Compose{
-						{ComposeID: "compose-1", Name: "Compose One"},
-						{ComposeID: "compose-2", Name: "Compose Two"},
-					},
-				},
-			},
-		},
+	compose := Compose{
+		ComposeID:     "compose-2",
+		Name:          "Compose Two",
+		Description:   "Platform shell",
+		EnvironmentID: "env-1",
+		ComposeType:   "docker-compose",
 	}
 
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/compose.one" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("composeId"); got != "compose-2" {
+			t.Errorf("expected composeId=compose-2, got %s", got)
+		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(projects)
+		json.NewEncoder(w).Encode(compose)
 	})
 	defer server.Close()
 
@@ -41,26 +40,21 @@ func TestGetCompose_Success(t *testing.T) {
 	if result.Name != "Compose Two" {
 		t.Errorf("expected name 'Compose Two', got %s", result.Name)
 	}
+	if result.Description != "Platform shell" {
+		t.Errorf("expected description 'Platform shell', got %s", result.Description)
+	}
+	if result.EnvironmentID != "env-1" {
+		t.Errorf("expected environment ID env-1, got %s", result.EnvironmentID)
+	}
+	if result.ComposeType != "docker-compose" {
+		t.Errorf("expected compose type docker-compose, got %s", result.ComposeType)
+	}
 }
 
 func TestGetCompose_NotFound(t *testing.T) {
-	projects := []Project{
-		{
-			ProjectID: "proj-1",
-			Environments: []Environment{
-				{
-					EnvironmentID: "env-1",
-					Compose: []Compose{
-						{ComposeID: "compose-1", Name: "Compose One"},
-					},
-				},
-			},
-		},
-	}
-
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(projects)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"error":"not found"}`))
 	})
 	defer server.Close()
 
@@ -75,10 +69,10 @@ func TestGetCompose_NotFound(t *testing.T) {
 	}
 }
 
-func TestGetCompose_EmptyProjects(t *testing.T) {
+func TestGetCompose_InvalidResponse(t *testing.T) {
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode([]Project{})
+		w.Write([]byte(`{"composeId":`))
 	})
 	defer server.Close()
 
@@ -88,8 +82,8 @@ func TestGetCompose_EmptyProjects(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !IsNotFound(err) {
-		t.Errorf("expected NotFoundError, got %T", err)
+	if IsNotFound(err) {
+		t.Errorf("expected parse error, got NotFoundError")
 	}
 }
 

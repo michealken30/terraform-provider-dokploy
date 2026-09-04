@@ -1091,24 +1091,23 @@ func (c *Client) CreateCompose(ctx context.Context, req CreateComposeRequest) (*
 	return &resp, nil
 }
 
-// GetCompose finds a compose by ID across all projects
+// GetCompose fetches a single compose by ID.
 func (c *Client) GetCompose(ctx context.Context, composeID string) (*Compose, error) {
-	projects, err := c.GetProjects(ctx)
+	endpoint := fmt.Sprintf("/compose.one?composeId=%s", composeID)
+	data, err := c.doRequest(ctx, endpoint)
 	if err != nil {
+		if IsNotFound(err) {
+			return nil, newNotFoundError("compose", composeID)
+		}
 		return nil, err //coverage:ignore
 	}
 
-	for _, proj := range projects {
-		for _, env := range proj.Environments {
-			for i := range env.Compose {
-				if env.Compose[i].ComposeID == composeID {
-					return &env.Compose[i], nil
-				}
-			}
-		}
+	var compose Compose
+	if err := json.Unmarshal(data, &compose); err != nil {
+		return nil, fmt.Errorf("parsing compose: %w", err) //coverage:ignore
 	}
 
-	return nil, newNotFoundError("compose", composeID)
+	return &compose, nil
 }
 
 // UpdateCompose updates an existing compose service
