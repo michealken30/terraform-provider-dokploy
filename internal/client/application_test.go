@@ -8,25 +8,23 @@ import (
 )
 
 func TestGetApplication_Success(t *testing.T) {
-	projects := []Project{
-		{
-			ProjectID: "proj-1",
-			Name:      "Project 1",
-			Environments: []Environment{
-				{
-					EnvironmentID: "env-1",
-					Applications: []Application{
-						{ApplicationID: "app-1", Name: "App One"},
-						{ApplicationID: "app-2", Name: "App Two"},
-					},
-				},
-			},
-		},
+	application := Application{
+		ApplicationID: "app-2",
+		Name:          "App Two",
+		AppName:       "app-two-generated",
+		Description:   "Application two",
+		EnvironmentID: "env-1",
 	}
 
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/application.one" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("applicationId"); got != "app-2" {
+			t.Errorf("expected applicationId=app-2, got %s", got)
+		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(projects)
+		json.NewEncoder(w).Encode(application)
 	})
 	defer server.Close()
 
@@ -42,26 +40,21 @@ func TestGetApplication_Success(t *testing.T) {
 	if result.Name != "App Two" {
 		t.Errorf("expected name 'App Two', got %s", result.Name)
 	}
+	if result.AppName != "app-two-generated" {
+		t.Errorf("expected app name app-two-generated, got %s", result.AppName)
+	}
+	if result.Description != "Application two" {
+		t.Errorf("expected description 'Application two', got %s", result.Description)
+	}
+	if result.EnvironmentID != "env-1" {
+		t.Errorf("expected environment ID env-1, got %s", result.EnvironmentID)
+	}
 }
 
 func TestGetApplication_NotFound(t *testing.T) {
-	projects := []Project{
-		{
-			ProjectID: "proj-1",
-			Environments: []Environment{
-				{
-					EnvironmentID: "env-1",
-					Applications: []Application{
-						{ApplicationID: "app-1", Name: "App One"},
-					},
-				},
-			},
-		},
-	}
-
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(projects)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"error":"not found"}`))
 	})
 	defer server.Close()
 
@@ -76,10 +69,10 @@ func TestGetApplication_NotFound(t *testing.T) {
 	}
 }
 
-func TestGetApplication_EmptyProjects(t *testing.T) {
+func TestGetApplication_InvalidResponse(t *testing.T) {
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode([]Project{})
+		w.Write([]byte(`{"applicationId":`))
 	})
 	defer server.Close()
 
@@ -89,8 +82,8 @@ func TestGetApplication_EmptyProjects(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !IsNotFound(err) {
-		t.Errorf("expected NotFoundError, got %T", err)
+	if IsNotFound(err) {
+		t.Errorf("expected parse error, got NotFoundError")
 	}
 }
 

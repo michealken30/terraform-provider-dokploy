@@ -692,24 +692,23 @@ func (c *Client) GetNotifications(ctx context.Context) ([]Notification, error) {
 	return notifications, nil
 }
 
-// GetApplication finds an application by ID across all projects
+// GetApplication fetches a single application by ID.
 func (c *Client) GetApplication(ctx context.Context, applicationID string) (*Application, error) {
-	projects, err := c.GetProjects(ctx)
+	endpoint := fmt.Sprintf("/application.one?applicationId=%s", applicationID)
+	data, err := c.doRequest(ctx, endpoint)
 	if err != nil {
+		if IsNotFound(err) {
+			return nil, newNotFoundError("application", applicationID)
+		}
 		return nil, err //coverage:ignore
 	}
 
-	for _, proj := range projects {
-		for _, env := range proj.Environments {
-			for i := range env.Applications {
-				if env.Applications[i].ApplicationID == applicationID {
-					return &env.Applications[i], nil
-				}
-			}
-		}
+	var application Application
+	if err := json.Unmarshal(data, &application); err != nil {
+		return nil, fmt.Errorf("parsing application: %w", err) //coverage:ignore
 	}
 
-	return nil, newNotFoundError("application", applicationID)
+	return &application, nil
 }
 
 // GetEnvironment fetches a single environment by ID
