@@ -905,16 +905,16 @@ func TestImportSafety_Domain(t *testing.T) {
 
 	sts.AssertNoWriteOperations(t)
 
-	// Verify POST to *.one is allowed (it's a read operation)
+	// Verify domain.one uses the documented read-only GET contract.
 	requests := sts.GetRequests()
 	if len(requests) != 1 {
 		t.Fatalf("Expected 1 request, got %d", len(requests))
 	}
-	if requests[0].Method != http.MethodPost {
-		t.Fatalf("Expected POST method, got %s", requests[0].Method)
+	if requests[0].Method != http.MethodGet {
+		t.Fatalf("Expected GET method, got %s", requests[0].Method)
 	}
-	if !strings.HasSuffix(requests[0].Endpoint, "/domain.one") {
-		t.Fatalf("Expected /domain.one, got %s", requests[0].Endpoint)
+	if requests[0].Endpoint != "/api/domain.one?domainId=domain-test-123" {
+		t.Fatalf("Expected domain.one query endpoint, got %s", requests[0].Endpoint)
 	}
 }
 

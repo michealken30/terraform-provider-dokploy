@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -82,31 +83,70 @@ func TestCreateDomain_WithComposeID(t *testing.T) {
 }
 
 func TestGetDomain_Success(t *testing.T) {
+	domainID := "domain/with spaces?and=value"
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/domain.one" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		if got := r.URL.Query().Get("domainId"); got != domainID {
+			t.Errorf("expected decoded domainId %q, got %q", domainID, got)
+		}
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("reading request body: %v", err)
+		}
+		if len(body) != 0 {
+			t.Errorf("expected empty GET body, got %q", string(body))
+		}
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(Domain{
-			DomainID: "domain-123",
-			Host:     "example.com",
-			HTTPS:    true,
+			DomainID:        domainID,
+			Host:            "example.com",
+			Path:            "/identity",
+			Port:            intPointer(1339),
+			HTTPS:           true,
+			CertificateType: "letsencrypt",
+			ApplicationID:   stringPointer("app-123"),
+			DomainType:      stringPointer("application"),
+			StripPath:       false,
+			UniqueConfigKey: 42,
 		})
 	})
 	defer server.Close()
 
 	client := newTestClient(server)
-	result, err := client.GetDomain(context.Background(), "domain-123")
+	result, err := client.GetDomain(context.Background(), domainID)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.DomainID != "domain-123" {
-		t.Errorf("expected domain ID domain-123, got %s", result.DomainID)
+	if result.DomainID != domainID {
+		t.Errorf("expected domain ID %q, got %q", domainID, result.DomainID)
 	}
 	if result.Host != "example.com" {
 		t.Errorf("expected host example.com, got %s", result.Host)
+	}
+	if result.Path != "/identity" || result.Port == nil || *result.Port != 1339 {
+		t.Errorf("unexpected route mapping: path=%q port=%v", result.Path, result.Port)
+	}
+	if !result.HTTPS || result.CertificateType != "letsencrypt" {
+		t.Errorf("unexpected TLS mapping: https=%v certificate=%q", result.HTTPS, result.CertificateType)
+	}
+	if result.ApplicationID == nil || *result.ApplicationID != "app-123" {
+		t.Errorf("unexpected application ID: %v", result.ApplicationID)
+	}
+	if result.DomainType == nil || *result.DomainType != "application" {
+		t.Errorf("unexpected domain type: %v", result.DomainType)
+	}
+	if result.StripPath {
+		t.Error("expected stripPath=false")
+	}
+	if result.UniqueConfigKey != 42 {
+		t.Errorf("expected uniqueConfigKey=42, got %d", result.UniqueConfigKey)
 	}
 }
 
@@ -123,7 +163,14 @@ func TestGetDomain_Error(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
+	if !IsNotFound(err) {
+		t.Errorf("expected not-found error, got %T: %v", err, err)
+	}
 }
+
+func intPointer(value int) *int { return &value }
+
+func stringPointer(value string) *string { return &value }
 
 func TestUpdateDomain_Success(t *testing.T) {
 	server := newTestServer(func(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -1629,9 +1630,13 @@ func (c *Client) CreateDomain(ctx context.Context, req CreateDomainRequest) (*Cr
 
 // GetDomain fetches a single domain by ID
 func (c *Client) GetDomain(ctx context.Context, domainID string) (*Domain, error) {
-	req := GetDomainRequest{DomainID: domainID}
-	data, err := c.doPostRequest(ctx, "/domain.one", req)
+	query := url.Values{}
+	query.Set("domainId", domainID)
+	data, err := c.doRequest(ctx, "/domain.one?"+query.Encode())
 	if err != nil {
+		if IsNotFound(err) {
+			return nil, newNotFoundError("domain", domainID)
+		}
 		return nil, fmt.Errorf("fetching domain: %w", err) //coverage:ignore
 	}
 
